@@ -1,0 +1,45 @@
+{
+  "name": "preact-animate",
+  "version": "1.0.0",
+  "description": "css-transition ui component for preact",
+  "scripts": {
+    "build": "cross-env NODE_ENV=production rollup -c rollup.config.js && rollup -c rollup.config.js",
+    "lint": "tslint src/*.ts"
+  },
+  "keywords": [
+    "preact",
+    "preact-component",
+    "preact-animate",
+    "animate"
+  ],
+  "files": [
+    "dist",
+    "src",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "homepage": "https://github.com/zeromake/preact-animate",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/zeromake/preact-animate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zeromake/preact-animate/issues"
+  },
+  "license": "MIT",
+  "main": "dist/preact-animate.js",
+  "module": "dist/preact-animate-esm.js",
+  "minified:main": "dist/preact-animate.min.js",
+  "devDependencies": {
+    "cross-env": "^5.0.5",
+    "preact": "^8.2.5",
+    "rollup": "^0.50.0",
+    "rollup-plugin-typescript": "^0.8.1",
+    "rollup-plugin-uglify": "^2.0.1",
+    "tslint": "^5.7.0",
+    "typescript": "^2.5.3",
+    "uglify-es": "^3.1.3"
+  }
+}

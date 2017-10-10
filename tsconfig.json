@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+      "module": "esnext", // 目标代码模块方式
+      "outDir": "build",
+      "sourceMap": true,
+      "target": "es5" // 目标代码平台
+      // "jsx": "react",
+      // "jsxFactory": "h"
+    },
+    "files": [
+       "src/types.d.ts",
+       "src/Animate.ts",
+      //  "node_modules/preact/src/preact.d.ts"
+       "node_modules/preact/src/preact.d.ts"
+    ]
+}
