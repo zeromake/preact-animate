@@ -85,6 +85,6 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
     }
 
     public render() {
-        return this.props.children[0];
+        return this.props.children && this.props.children[0];
     }
 }
