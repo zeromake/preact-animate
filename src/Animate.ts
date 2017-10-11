@@ -280,9 +280,9 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
             };
             if (!isSameChildren(this.state.children,
                 currentChildren, props.showProp)) {
-                this.setState({
-                    children: currentChildren,
-                }, end);
+                // sync update
+                this.state.children = currentChildren;
+                this.forceUpdate(end);
             } else {
                 end();
             }
@@ -324,13 +324,13 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
             return h(
                 (AnimateChild as any),
                 {
-                key: child.key,
-                ref: refFun,
-                animation: props.animation,
-                transitionEnter: props.transitionEnter,
-                transitionAppear: props.transitionAppear,
-                transitionName: props.transitionName,
-                transitionLeave: props.transitionLeave,
+                    key: child.key,
+                    ref: refFun,
+                    animation: props.animation,
+                    transitionEnter: props.transitionEnter,
+                    transitionAppear: props.transitionAppear,
+                    transitionName: props.transitionName,
+                    transitionLeave: props.transitionLeave,
                 },
                 child);
             });

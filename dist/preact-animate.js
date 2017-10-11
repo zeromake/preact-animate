@@ -443,7 +443,7 @@ var AnimateChild = /** @class */ (function (_super) {
         }
     };
     AnimateChild.prototype.render = function () {
-        return this.props.children[0];
+        return this.props.children && this.props.children[0];
     };
     return AnimateChild;
 }(preact.Component));
@@ -538,9 +538,9 @@ var Animate = /** @class */ (function (_super) {
                     }
                 };
                 if (!isSameChildren(_this.state.children, currentChildren, props.showProp)) {
-                    _this.setState({
-                        children: currentChildren,
-                    }, end);
+                    // sync update
+                    _this.state.children = currentChildren;
+                    _this.forceUpdate(end);
                 }
                 else {
                     end();
