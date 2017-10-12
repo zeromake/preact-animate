@@ -25,7 +25,7 @@ module.exports = {
         rollupTypescriptPlugin,
         uglify({}, minify)
     ],
-    sourcemap: false,
+    sourcemap: !isProduction,
     output: isProduction ? [
         {
             format: 'umd',

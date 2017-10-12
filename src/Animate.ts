@@ -212,7 +212,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         if (this.childrenRefs[key]) {
             this.currentlyAnimatingKeys[key] = true;
             this.childrenRefs[key].componentWillEnter(
-            this.handleDoneAdding.bind(this, key, "enter"),
+                this.handleDoneAdding.bind(this, key, "enter"),
             );
         }
     }

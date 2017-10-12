@@ -736,3 +736,4 @@ var Animate = /** @class */ (function (_super) {
 }(Component));
 
 export default Animate;
+//# sourceMappingURL=preact-animate-esm.js.map

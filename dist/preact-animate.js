@@ -742,3 +742,4 @@ var Animate = /** @class */ (function (_super) {
 return Animate;
 
 })));
+//# sourceMappingURL=preact-animate.js.map
