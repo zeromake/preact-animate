@@ -129,6 +129,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                 if ((!nextChild || !nextChild.attributes[showProp]) && currentChild.attributes[showProp]) {
                     newChild = cloneElement(nextChild || currentChild, {
                         [showProp]: true,
+                        // style: "",
                     });
                 } else {
                     newChild = nextChild;
@@ -280,8 +281,23 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
             };
             if (!isSameChildren(this.state.children,
                 currentChildren, props.showProp)) {
+                // let newChildren = null;
+                // if (props.showProp) {
+                //     newChildren = currentChildren.map((child) => {
+                //         if (child.key === key) {
+                //             return cloneElement(
+                //                 child,
+                //                 {
+                //                     style: "display: none;",
+                //                 },
+                //             );
+                //         } else {
+                //             return child;
+                //         }
+                //     });
+                // }
                 // sync update
-                this.state.children = currentChildren;
+                this.state.children = currentChildren; // newChildren ||
                 this.forceUpdate(end);
             } else {
                 end();

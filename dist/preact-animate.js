@@ -538,8 +538,21 @@ var Animate = /** @class */ (function (_super) {
                     }
                 };
                 if (!isSameChildren(_this.state.children, currentChildren, props.showProp)) {
+                    var newChildren = null;
+                    if (props.showProp) {
+                        newChildren = currentChildren.map(function (child) {
+                            if (child.key === key) {
+                                return preact.cloneElement(child, {
+                                    style: "display: none;",
+                                });
+                            }
+                            else {
+                                return child;
+                            }
+                        });
+                    }
                     // sync update
-                    _this.state.children = currentChildren;
+                    _this.state.children = newChildren || currentChildren;
                     _this.forceUpdate(end);
                 }
                 else {
@@ -596,6 +609,7 @@ var Animate = /** @class */ (function (_super) {
                 if ((!nextChild || !nextChild.attributes[showProp]) && currentChild.attributes[showProp]) {
                     newChild = preact.cloneElement(nextChild || currentChild, (_a = {},
                         _a[showProp] = true,
+                        _a.style = "",
                         _a));
                 }
                 else {
