@@ -30,6 +30,70 @@ function getChildrenFromProps(props: IAnimateProps) {
 function noop() {
 }
 
+function addDisplyNone(child: any, clone?: any) {
+    let style = "display: none;";
+    if (child.attributes.style) {
+        if (typeof child.attributes.style === "string") {
+            style = child.attributes.style.replace(/display *: *\w+ *;?/i, "");
+            style += "display: none;";
+        } else {
+            style = {
+                ...child.attributes.style,
+                display: 'none'
+            };
+        }
+    }
+    let childClone = null;
+    if (clone) {
+        childClone = {
+            ...clone,
+            style,
+        };
+    } else {
+        childClone = {
+            style,
+        }
+    }
+     
+    return cloneElement(
+        child,
+        childClone,
+    );
+}
+
+function removeDisplyNone(child: any, clone?: any) {
+    if (child.attributes.style) {
+        let style;
+        if (typeof child.attributes.style === "string") {
+            style = child.attributes.style.replace(/display *: *\w+ *;?/i, "");
+        } else if(child.attributes.style.display) {
+            style = {
+                ...child.attributes.style
+            }
+            delete style.display;
+        } else {
+            return child;
+        }
+        let childClone = null;
+        if (clone) {
+            childClone = {
+                ...clone,
+                style,
+            };
+        } else {
+            childClone = {
+                style,
+            }
+        }
+        return cloneElement(
+            child,
+            childClone,
+        );
+    } else {
+        return child;
+    }
+}
+
 interface IAnimateProps {
     component: any;
     componentProps: object;
@@ -44,6 +108,7 @@ interface IAnimateProps {
     onLeave: (key: string) => void;
     onAppear: (key: string) => void;
     showProp: string;
+    disableShow?: boolean;
     className?: string;
     style?: string|object;
     children: any[];
@@ -70,6 +135,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         transitionEnter: true,
         transitionLeave: true,
         transitionAppear: false,
+        disableShow: false,
         onEnd: noop,
         onEnter: noop,
         onLeave: noop,
@@ -82,9 +148,28 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         this.currentlyAnimatingKeys = {};
         this.keysToEnter = [];
         this.keysToLeave = [];
-
+        // const tmpChildren = getChildrenFromProps(this.props);
+        const children = []
+        this.props.children.forEach((child) => {
+            if (isValidElement(child)) {
+                if (!child.key) {
+                    child = cloneElement(child, {
+                        key: defaultKey,
+                    });
+                }
+                if (this.props.showProp && (!this.props.disableShow && !child.attributes.disableShow)) {
+                    const showProp = child.attributes[this.props.showProp];
+                    if (showProp) {
+                        child = removeDisplyNone(child)
+                    } else {
+                        child = addDisplyNone(child);
+                    }
+                }
+                children.push(child);
+            }
+        })
         this.state = {
-            children: getChildrenFromProps(this.props),
+            children,
         };
 
         this.childrenRefs = {};
@@ -127,10 +212,16 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                 const nextChild = currentChild && findChildInChildrenByKey(nextChildren, currentChild.key);
                 let newChild;
                 if ((!nextChild || !nextChild.attributes[showProp]) && currentChild.attributes[showProp]) {
-                    newChild = cloneElement(nextChild || currentChild, {
-                        [showProp]: true,
-                        // style: "",
-                    });
+                    const tmpChild = nextChild || currentChild;
+                    if (!props.disableShow && !tmpChild.attributes.disableShow) {
+                        newChild = cloneElement(tmpChild, {
+                            [showProp]: true,
+                        });
+                    } else {
+                        newChild = removeDisplyNone(tmpChild, {
+                            [showProp]: true,
+                        });
+                    }
                 } else {
                     newChild = nextChild;
                 }
@@ -166,7 +257,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                 if (hasPrev) {
                     const showInNow = findShownChildInChildrenByKey(currentChildren, key, showProp);
                     if (!showInNow && showInNext) {
-                    this.keysToEnter.push(key);
+                        this.keysToEnter.push(key);
                     }
                 } else if (showInNext) {
                     this.keysToEnter.push(key);
@@ -281,23 +372,17 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
             };
             if (!isSameChildren(this.state.children,
                 currentChildren, props.showProp)) {
-                // let newChildren = null;
-                // if (props.showProp) {
-                //     newChildren = currentChildren.map((child) => {
-                //         if (child.key === key) {
-                //             return cloneElement(
-                //                 child,
-                //                 {
-                //                     style: "display: none;",
-                //                 },
-                //             );
-                //         } else {
-                //             return child;
-                //         }
-                //     });
-                // }
+                let newChildren = null;
+                if (props.showProp) {
+                    newChildren = currentChildren.map((child) => {
+                        if (child.key === key && (!props.disableShow && !child.attributes.disableShow)) {
+                            return addDisplyNone(child);
+                        }
+                        return child
+                    });
+                }
                 // sync update
-                this.state.children = currentChildren; // newChildren ||
+                this.state.children = newChildren || currentChildren;
                 this.forceUpdate(end);
             } else {
                 end();

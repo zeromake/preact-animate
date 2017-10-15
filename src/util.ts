@@ -1,4 +1,4 @@
-import { Component } from "preact";
+import preact, { Component } from "preact";
 
 const util = {
     isAppearSupported(props: any) {
@@ -20,8 +20,8 @@ const util = {
         return props.transitionLeave || props.animation.leave;
     },
     findDOMNode(component: Component<any, any>) {
-        if (!(component as any).base && (component as any).vdom) {
-            return component && (component as any).vdom && (component as any).vdom.base || component;
+        if (typeof preact.findDOMNode === "function") {
+            return preact.findDOMNode(component);
         } else {
             return (component as any).base || component;
         }

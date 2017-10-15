@@ -1,4 +1,4 @@
-import { Component, cloneElement, h } from 'preact';
+import preact, { Component, cloneElement, h } from 'preact';
 
 const __assign = Object.assign || function (target) {
     for (var source, i = 1; i < arguments.length; i++) {
@@ -355,8 +355,8 @@ var util = {
         return props.transitionLeave || props.animation.leave;
     },
     findDOMNode: function (component) {
-        if (!component.base && component.vdom) {
-            return component && component.vdom && component.vdom.base || component;
+        if (typeof preact.findDOMNode === "function") {
+            return preact.findDOMNode(component);
         }
         else {
             return component.base || component;
@@ -463,6 +463,56 @@ function getChildrenFromProps(props) {
 }
 function noop() {
 }
+function addDisplyNone(child, clone) {
+    var style = "display: none;";
+    if (child.attributes.style) {
+        if (typeof child.attributes.style === "string") {
+            style = child.attributes.style.replace(/display *: *\w+ *;?/i, "");
+            style += "display: none;";
+        }
+        else {
+            style = __assign({}, child.attributes.style, { display: 'none' });
+        }
+    }
+    var childClone = null;
+    if (clone) {
+        childClone = __assign({}, clone, { style: style });
+    }
+    else {
+        childClone = {
+            style: style,
+        };
+    }
+    return cloneElement(child, childClone);
+}
+function removeDisplyNone(child, clone) {
+    if (child.attributes.style) {
+        var style = void 0;
+        if (typeof child.attributes.style === "string") {
+            style = child.attributes.style.replace(/display *: *\w+ *;?/i, "");
+        }
+        else if (child.attributes.style.display) {
+            style = __assign({}, child.attributes.style);
+            delete style.display;
+        }
+        else {
+            return child;
+        }
+        var childClone = null;
+        if (clone) {
+            childClone = __assign({}, clone, { style: style });
+        }
+        else {
+            childClone = {
+                style: style,
+            };
+        }
+        return cloneElement(child, childClone);
+    }
+    else {
+        return child;
+    }
+}
 var Animate = /** @class */ (function (_super) {
     __extends(Animate, _super);
     function Animate(props, c) {
@@ -537,14 +587,10 @@ var Animate = /** @class */ (function (_super) {
                     var newChildren = null;
                     if (props.showProp) {
                         newChildren = currentChildren.map(function (child) {
-                            if (child.key === key) {
-                                return cloneElement(child, {
-                                    style: "display: none;",
-                                });
+                            if (child.key === key && (!props.disableShow && !child.attributes.disableShow)) {
+                                return addDisplyNone(child);
                             }
-                            else {
-                                return child;
-                            }
+                            return child;
                         });
                     }
                     // sync update
@@ -559,8 +605,29 @@ var Animate = /** @class */ (function (_super) {
         _this.currentlyAnimatingKeys = {};
         _this.keysToEnter = [];
         _this.keysToLeave = [];
+        // const tmpChildren = getChildrenFromProps(this.props);
+        var children = [];
+        _this.props.children.forEach(function (child) {
+            if (isValidElement(child)) {
+                if (!child.key) {
+                    child = cloneElement(child, {
+                        key: defaultKey,
+                    });
+                }
+                if (_this.props.showProp && (!_this.props.disableShow && !child.attributes.disableShow)) {
+                    var showProp = child.attributes[_this.props.showProp];
+                    if (showProp) {
+                        child = removeDisplyNone(child);
+                    }
+                    else {
+                        child = addDisplyNone(child);
+                    }
+                }
+                children.push(child);
+            }
+        });
         _this.state = {
-            children: getChildrenFromProps(_this.props),
+            children: children,
         };
         _this.childrenRefs = {};
         return _this;
@@ -603,10 +670,17 @@ var Animate = /** @class */ (function (_super) {
                 var nextChild = currentChild && findChildInChildrenByKey(nextChildren, currentChild.key);
                 var newChild;
                 if ((!nextChild || !nextChild.attributes[showProp]) && currentChild.attributes[showProp]) {
-                    newChild = cloneElement(nextChild || currentChild, (_a = {},
-                        _a[showProp] = true,
-                        _a.style = "",
-                        _a));
+                    var tmpChild = nextChild || currentChild;
+                    if (!props.disableShow && !tmpChild.attributes.disableShow) {
+                        newChild = cloneElement(tmpChild, (_a = {},
+                            _a[showProp] = true,
+                            _a));
+                    }
+                    else {
+                        newChild = removeDisplyNone(tmpChild, (_b = {},
+                            _b[showProp] = true,
+                            _b));
+                    }
                 }
                 else {
                     newChild = nextChild;
@@ -614,7 +688,7 @@ var Animate = /** @class */ (function (_super) {
                 if (newChild) {
                     newChildren.push(newChild);
                 }
-                var _a;
+                var _a, _b;
             });
             nextChildren.forEach(function (nextChild) {
                 if (!nextChild || !findChildInChildrenByKey(currentChildren, nextChild.key)) {
@@ -741,6 +815,7 @@ var Animate = /** @class */ (function (_super) {
         transitionEnter: true,
         transitionLeave: true,
         transitionAppear: false,
+        disableShow: false,
         onEnd: noop,
         onEnter: noop,
         onLeave: noop,
