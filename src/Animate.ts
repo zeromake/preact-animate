@@ -223,7 +223,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                         });
                     }
                 } else {
-                    newChild = nextChild;
+                    newChild = addDisplyNone(nextChild);
                 }
                 if (newChild) {
                     newChildren.push(newChild);
