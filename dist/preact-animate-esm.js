@@ -471,7 +471,7 @@ function addDisplyNone(child, clone) {
             style += "display: none;";
         }
         else {
-            style = __assign({}, child.attributes.style, { display: 'none' });
+            style = __assign({}, child.attributes.style, { display: "none" });
         }
     }
     var childClone = null;
@@ -669,21 +669,22 @@ var Animate = /** @class */ (function (_super) {
             currentChildren.forEach(function (currentChild) {
                 var nextChild = currentChild && findChildInChildrenByKey(nextChildren, currentChild.key);
                 var newChild;
+                var tmpChild = nextChild || currentChild;
                 if ((!nextChild || !nextChild.attributes[showProp]) && currentChild.attributes[showProp]) {
-                    var tmpChild = nextChild || currentChild;
-                    if (!props.disableShow && !tmpChild.attributes.disableShow) {
-                        newChild = cloneElement(tmpChild, (_a = {},
-                            _a[showProp] = true,
-                            _a));
-                    }
-                    else {
-                        newChild = removeDisplyNone(tmpChild, (_b = {},
-                            _b[showProp] = true,
-                            _b));
-                    }
+                    newChild = cloneElement(tmpChild, (_a = {},
+                        _a[showProp] = true,
+                        _a));
+                }
+                else if (!nextProps.disableShow &&
+                    !nextChild.attributes.disableShow &&
+                    !nextChild.attributes[showProp] &&
+                    !currentChild.attributes[showProp]) {
+                    newChild = addDisplyNone(tmpChild, (_b = {},
+                        _b[showProp] = false,
+                        _b));
                 }
                 else {
-                    newChild = addDisplyNone(nextChild);
+                    newChild = nextChild;
                 }
                 if (newChild) {
                     newChildren.push(newChild);

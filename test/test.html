@@ -76,11 +76,18 @@
                     show: false
                 }
                 this.test = this.test.bind(this);
+                this.test2 = this.test2.bind(this);
             }
             test() {
                 console.log(this.state)
                 this.setState({
                     show: !this.state.show
+                })
+            }
+            test2() {
+                console.log(this.state)
+                this.setState({
+                    show: this.state.show
                 })
             }
             render() {
@@ -91,6 +98,11 @@
                         'button',
                         { onClick: this.test },
                         "切换"
+                    ),
+                    h(
+                        'button',
+                        { onClick: this.test2 },
+                        "测试"
                     ),
                     h(
                         Animate,

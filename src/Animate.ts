@@ -39,7 +39,7 @@ function addDisplyNone(child: any, clone?: any) {
         } else {
             style = {
                 ...child.attributes.style,
-                display: 'none'
+                display: "none",
             };
         }
     }
@@ -52,9 +52,8 @@ function addDisplyNone(child: any, clone?: any) {
     } else {
         childClone = {
             style,
-        }
+        };
     }
-     
     return cloneElement(
         child,
         childClone,
@@ -66,10 +65,10 @@ function removeDisplyNone(child: any, clone?: any) {
         let style;
         if (typeof child.attributes.style === "string") {
             style = child.attributes.style.replace(/display *: *\w+ *;?/i, "");
-        } else if(child.attributes.style.display) {
+        } else if (child.attributes.style.display) {
             style = {
-                ...child.attributes.style
-            }
+                ...child.attributes.style,
+            };
             delete style.display;
         } else {
             return child;
@@ -83,7 +82,7 @@ function removeDisplyNone(child: any, clone?: any) {
         } else {
             childClone = {
                 style,
-            }
+            };
         }
         return cloneElement(
             child,
@@ -149,7 +148,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         this.keysToEnter = [];
         this.keysToLeave = [];
         // const tmpChildren = getChildrenFromProps(this.props);
-        const children = []
+        const children = [];
         this.props.children.forEach((child) => {
             if (isValidElement(child)) {
                 if (!child.key) {
@@ -160,14 +159,14 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                 if (this.props.showProp && (!this.props.disableShow && !child.attributes.disableShow)) {
                     const showProp = child.attributes[this.props.showProp];
                     if (showProp) {
-                        child = removeDisplyNone(child)
+                        child = removeDisplyNone(child);
                     } else {
                         child = addDisplyNone(child);
                     }
                 }
                 children.push(child);
             }
-        })
+        });
         this.state = {
             children,
         };
@@ -211,19 +210,22 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
             currentChildren.forEach((currentChild) => {
                 const nextChild = currentChild && findChildInChildrenByKey(nextChildren, currentChild.key);
                 let newChild;
+                const tmpChild = nextChild || currentChild;
                 if ((!nextChild || !nextChild.attributes[showProp]) && currentChild.attributes[showProp]) {
-                    const tmpChild = nextChild || currentChild;
-                    if (!props.disableShow && !tmpChild.attributes.disableShow) {
-                        newChild = cloneElement(tmpChild, {
-                            [showProp]: true,
-                        });
-                    } else {
-                        newChild = removeDisplyNone(tmpChild, {
-                            [showProp]: true,
-                        });
-                    }
+                    newChild = cloneElement(tmpChild, {
+                        [showProp]: true,
+                    });
+                } else if (
+                    !nextProps.disableShow &&
+                    !nextChild.attributes.disableShow &&
+                    !nextChild.attributes[showProp] &&
+                    !currentChild.attributes[showProp]
+                ) {
+                    newChild = addDisplyNone(tmpChild, {
+                        [showProp]: false,
+                    });
                 } else {
-                    newChild = addDisplyNone(nextChild);
+                    newChild = nextChild;
                 }
                 if (newChild) {
                     newChildren.push(newChild);
@@ -378,7 +380,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                         if (child.key === key && (!props.disableShow && !child.attributes.disableShow)) {
                             return addDisplyNone(child);
                         }
-                        return child
+                        return child;
                     });
                 }
                 // sync update
