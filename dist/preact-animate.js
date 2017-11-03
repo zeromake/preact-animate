@@ -689,7 +689,7 @@ var Animate = /** @class */ (function (_super) {
                     }
                 }
                 else {
-                    newChild = nextChild;
+                    newChild = addDisplyNone(nextChild);
                 }
                 if (newChild) {
                     newChildren.push(newChild);
