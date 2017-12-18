@@ -1,30 +1,66 @@
 import preact, { Component } from "preact";
 
-const util = {
-    isAppearSupported(props: any) {
-        return props.transitionName && props.transitionAppear || props.animation.appear;
-    },
-    isEnterSupported(props: any) {
-        return props.transitionName && props.transitionEnter || props.animation.enter;
-    },
-    isLeaveSupported(props: any) {
-        return props.transitionName && props.transitionLeave || props.animation.leave;
-    },
-    allowAppearCallback(props: any) {
-        return props.transitionAppear || props.animation.appear;
-    },
-    allowEnterCallback(props: any) {
-        return props.transitionEnter || props.animation.enter;
-    },
-    allowLeaveCallback(props: any) {
-        return props.transitionLeave || props.animation.leave;
-    },
-    findDOMNode(component: Component<any, any>) {
-        if (typeof preact.findDOMNode === "function") {
-            return preact.findDOMNode(component);
-        } else {
-            return (component as any).base || component;
+export function isAppearSupported(props: any) {
+    return props.transitionName && props.transitionAppear || props.animation.appear;
+}
+export function isEnterSupported(props: any) {
+    return props.transitionName && props.transitionEnter || props.animation.enter;
+}
+export function isLeaveSupported(props: any) {
+    return props.transitionName && props.transitionLeave || props.animation.leave;
+}
+export function isDisappearSupported(props: any) {
+    return props.transitionName && props.transitionDisappear || props.animation.disappear;
+}
+export function allowAppearCallback(props: any) {
+    return props.transitionAppear || props.animation.appear;
+}
+export function allowEnterCallback(props: any) {
+    return props.transitionEnter || props.animation.enter;
+}
+export function allowLeaveCallback(props: any) {
+    return props.transitionLeave || props.animation.leave;
+}
+export function findDOMNode(component: Component<any, any>) {
+    if (typeof preact.findDOMNode === "function") {
+        return preact.findDOMNode(component);
+    } else {
+        return (component as any).base || component;
+    }
+}
+export function addDisplyNone(component: any) {
+    const node = findDOMNode(component);
+    if (node && node.style) {
+        if (node.style.display && node.style.display !== "") {
+            component.displayCss = node.style.display;
         }
-    },
+        node.style.display = "none";
+    }
+}
+export function removeDisplyNone(component: any) {
+    const node = findDOMNode(component);
+    if (node && node.style) {
+        if (component.displayCss && component.displayCss !== "") {
+            node.style.display = component.displayCss;
+        } else {
+            node.style.display = "";
+        }
+    }
+}
+export function isDisplyShow(props, childProps) {
+    return props.showProp && (!props.disableShow && !childProps.disableShow);
+}
+export default {
+    isAppearSupported,
+    isEnterSupported,
+    isDisappearSupported,
+    isLeaveSupported,
+    allowAppearCallback,
+    allowEnterCallback,
+    allowLeaveCallback,
+    findDOMNode,
+    addDisplyNone,
+    removeDisplyNone,
+    isDisplyShow,
 };
-export default util;
+// export default util;

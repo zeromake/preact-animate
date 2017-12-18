@@ -69,6 +69,10 @@
         var render = preact.render;
         var Animate = animate;
 
+        var test = function(props) {
+            return h('div', { class: 'animated test', "data-show": props['data-show']}, props.name)
+        }
+
         class App extends Component {
             constructor() {
                 super();
@@ -107,16 +111,21 @@
                     h(
                         Animate,
                         {
-                            component: null,
+                            // component: null,
+                            transitionAppear: true,
                             transitionEnter: true,
-                            transitionLeave: true,
+                            transitionInitLeave: true,
+                            transitionDisappear: true,
                             showProp: "data-show",
                             transitionName: {
+                                appear: "fadeInLeft",
                                 enter: "fadeInLeft",
-                                leave: "fadeInRight"
+                                leave: "fadeInRight",
+                                disappear: "fadeInRight"
                             }
                         },
-                        h('div', { class: 'animated test', "data-show": this.state.show }, '测试')
+                        h(test, {name: '测试1', key: 1, 'data-show': this.state.show}),
+                        h(test, {name: '测试2', key: 2, 'data-show': !this.state.show})
                     )
                 )
             }

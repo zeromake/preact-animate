@@ -6,6 +6,7 @@ const transitionMap = {
     enter: "transitionEnter",
     appear: "transitionAppear",
     leave: "transitionLeave",
+    disappear: "transitionDisappear",
 };
 
 interface IAnimateChildProps {
@@ -15,16 +16,28 @@ interface IAnimateChildProps {
     transitionEnter: boolean;
     transitionAppear: boolean;
     transitionLeave: boolean;
+    transitionDisappear: boolean;
+    displyShow: boolean;
 }
 
 export default class AnimateChild extends Component<IAnimateChildProps, any> {
     public stopper: null | { stop: () => void};
+    public displayCss: string | undefined;
     public componentWillUnmount() {
         this.stop();
     }
-
+    private togglerDisply(show: boolean) {
+        if (this.props.displyShow) {
+            if (show) {
+                animUtil.removeDisplyNone(this);
+            } else {
+                animUtil.addDisplyNone(this);
+            }
+        }
+    }
     public componentWillEnter(done: () => void) {
         if (animUtil.isEnterSupported(this.props)) {
+            this.togglerDisply(true);
             this.transition("enter", done);
         } else {
             done();
@@ -38,10 +51,23 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
             done();
         }
     }
-
+    public componentWillDisappear(done: () => void) {
+        if (animUtil.isDisappearSupported(this.props)) {
+            this.transition("disappear", () => {
+                this.togglerDisply(false);
+                done();
+            });
+        } else {
+            this.togglerDisply(false);
+            done();
+        }
+    }
     public componentWillLeave(done: () => void) {
         if (animUtil.isLeaveSupported(this.props)) {
-            this.transition("leave", done);
+            this.transition("leave", () => {
+                this.togglerDisply(false);
+                done();
+            });
         } else {
             // always sync, do not interupt with react component life cycle
             // update hidden -> animate hidden ->

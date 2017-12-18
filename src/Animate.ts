@@ -30,69 +30,6 @@ function getChildrenFromProps(props: IAnimateProps) {
 function noop() {
 }
 
-function addDisplyNone(child: any, clone?: any) {
-    let style = "display: none;";
-    if (child.attributes.style) {
-        if (typeof child.attributes.style === "string") {
-            style = child.attributes.style.replace(/display *: *\w+ *;?/i, "");
-            style += "display: none;";
-        } else {
-            style = {
-                ...child.attributes.style,
-                display: "none",
-            };
-        }
-    }
-    let childClone = null;
-    if (clone) {
-        childClone = {
-            ...clone,
-            style,
-        };
-    } else {
-        childClone = {
-            style,
-        };
-    }
-    return cloneElement(
-        child,
-        childClone,
-    );
-}
-
-function removeDisplyNone(child: any, clone?: any) {
-    if (child.attributes.style) {
-        let style;
-        if (typeof child.attributes.style === "string") {
-            style = child.attributes.style.replace(/display *: *\w+ *;?/i, "");
-        } else if (child.attributes.style.display) {
-            style = {
-                ...child.attributes.style,
-            };
-            delete style.display;
-        } else {
-            return child;
-        }
-        let childClone = null;
-        if (clone) {
-            childClone = {
-                ...clone,
-                style,
-            };
-        } else {
-            childClone = {
-                style,
-            };
-        }
-        return cloneElement(
-            child,
-            childClone,
-        );
-    } else {
-        return child;
-    }
-}
-
 interface IAnimateProps {
     component: any;
     componentProps: object;
@@ -101,6 +38,7 @@ interface IAnimateProps {
     transitionEnter: boolean;
     transitionAppear: boolean;
     transitionLeave: boolean;
+    transitionDisappear: boolean;
     exclusive: boolean;
     onEnd: (key: string, exists: boolean) => void;
     onEnter: (key: string) => void;
@@ -156,14 +94,14 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                         key: defaultKey,
                     });
                 }
-                if (this.props.showProp && (!this.props.disableShow && !child.attributes.disableShow)) {
-                    const showProp = child.attributes[this.props.showProp];
-                    if (showProp) {
-                        child = removeDisplyNone(child);
-                    } else {
-                        child = addDisplyNone(child);
-                    }
-                }
+                // if (this.props.showProp && (!this.props.disableShow && !child.attributes.disableShow)) {
+                //     const showProp = child.attributes[this.props.showProp];
+                //     if (showProp) {
+                //         child = removeDisplyNone(child);
+                //     } else {
+                //         child = addDisplyNone(child);
+                //     }
+                // }
                 children.push(child);
             }
         });
@@ -176,15 +114,28 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
 
     public componentDidMount() {
         const showProp = this.props.showProp;
-        let children = this.state.children;
+        const children = this.state.children;
+        let appearChildren = [];
+        const disappearChildren = [];
         if (showProp) {
-            children = children.filter((child) => {
-                return !!child.attributes[showProp];
+            children.forEach((child) => {
+                if (!!child.attributes[showProp]) {
+                    appearChildren.push(child);
+                } else {
+                    disappearChildren.push(child);
+                }
             });
+        } else {
+            appearChildren = children;
         }
-        children.forEach((child) => {
+        appearChildren.forEach((child) => {
             if (child) {
                 this.performAppear(child.key);
+            }
+        });
+        disappearChildren.forEach((child) => {
+            if (child) {
+                this.performDisappear(child.key);
             }
         });
     }
@@ -214,15 +165,6 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                 if ((!nextChild || !nextChild.attributes[showProp]) && currentChild.attributes[showProp]) {
                     newChild = cloneElement(tmpChild, {
                         [showProp]: true,
-                    });
-                } else if (
-                    !nextProps.disableShow &&
-                    !nextChild.attributes.disableShow &&
-                    !nextChild.attributes[showProp] &&
-                    !currentChild.attributes[showProp]
-                ) {
-                    newChild = addDisplyNone(tmpChild, {
-                        [showProp]: false,
                     });
                 } else {
                     newChild = nextChild;
@@ -345,7 +287,12 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
             }
         }
     }
-
+    public performDisappear = (key) => {
+        if (this.childrenRefs[key]) {
+            this.currentlyAnimatingKeys[key] = true;
+            this.childrenRefs[key].componentWillDisappear(this.handleDoneLeaving.bind(this, key));
+        }
+    }
     public performLeave = (key) => {
         // may already remove by exclusive
         if (this.childrenRefs[key]) {
@@ -372,19 +319,14 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                     props.onEnd(key, false);
                 }
             };
-            if (!isSameChildren(this.state.children,
-                currentChildren, props.showProp)) {
-                let newChildren = null;
-                if (props.showProp) {
-                    newChildren = currentChildren.map((child) => {
-                        if (child.key === key && (!props.disableShow && !child.attributes.disableShow)) {
-                            return addDisplyNone(child);
-                        }
-                        return child;
-                    });
-                }
-                // sync update
-                this.state.children = newChildren || currentChildren;
+            if (
+                !isSameChildren(
+                    this.state.children,
+                    currentChildren,
+                    props.showProp,
+                )
+            ) {
+                this.state.children = currentChildren;
                 this.forceUpdate(end);
             } else {
                 end();
@@ -415,27 +357,34 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         let children = null;
         if (stateChildren) {
             children = stateChildren.map((child) => {
-            if (child === null || child === undefined) {
-                return child;
-            }
-            if (!child.key) {
-                throw new Error("must set key for <rc-animate> children");
-            }
-            const refFun = (node) => {
-                this.childrenRefs[child.key] = node;
-            };
-            return h(
-                (AnimateChild as any),
-                {
+                if (child === null || child === undefined) {
+                    return child;
+                }
+                if (!child.key) {
+                    throw new Error("must set key for <rc-animate> children");
+                }
+                const refFun = (node) => {
+                    this.childrenRefs[child.key] = node;
+                };
+                const childProps = {
                     key: child.key,
                     ref: refFun,
                     animation: props.animation,
+                    transitionDisappear: props.transitionDisappear,
                     transitionEnter: props.transitionEnter,
                     transitionAppear: props.transitionAppear,
                     transitionName: props.transitionName,
                     transitionLeave: props.transitionLeave,
-                },
-                child);
+                    displyShow: false,
+                };
+                if (animUtil.isDisplyShow(props, child.attributes)) {
+                    childProps.displyShow = true;
+                }
+                return h(
+                    (AnimateChild as any),
+                    childProps,
+                    child,
+                );
             });
         }
         const _Component = props.component;
