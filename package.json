@@ -1,6 +1,6 @@
 {
   "name": "preact-animate",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "css-transition ui component for preact",
   "scripts": {
     "build": "cross-env NODE_ENV=production rollup -c rollup.config.js && rollup -c rollup.config.js",
