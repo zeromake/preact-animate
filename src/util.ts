@@ -50,6 +50,7 @@ export function removeDisplyNone(component: any) {
 export function isDisplyShow(props, childProps) {
     return props.showProp && (!props.disableShow && !childProps.disableShow);
 }
+
 export default {
     isAppearSupported,
     isEnterSupported,

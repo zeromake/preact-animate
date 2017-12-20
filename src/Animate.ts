@@ -6,6 +6,8 @@ import {
     findChildInChildrenByKey,
     isSameChildren,
     isValidElement,
+    forEach,
+    arrayMap,
 } from "./ChildrenUtils";
 import AnimateChild from "./AnimateChild";
 const defaultKey = `rc_animate_${Date.now()}`;
@@ -14,7 +16,7 @@ import animUtil from "./util";
 function getChildrenFromProps(props: IAnimateProps) {
     const children = props.children;
     const newChildren = [];
-    children.forEach((child) => {
+    forEach(children, (child) => {
         if (isValidElement(child)) {
             if (!child.key) {
                 child = cloneElement(child, {
@@ -87,21 +89,13 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         this.keysToLeave = [];
         // const tmpChildren = getChildrenFromProps(this.props);
         const children = [];
-        this.props.children.forEach((child) => {
+        forEach(this.props.children, (child) => {
             if (isValidElement(child)) {
                 if (!child.key) {
                     child = cloneElement(child, {
                         key: defaultKey,
                     });
                 }
-                // if (this.props.showProp && (!this.props.disableShow && !child.attributes.disableShow)) {
-                //     const showProp = child.attributes[this.props.showProp];
-                //     if (showProp) {
-                //         child = removeDisplyNone(child);
-                //     } else {
-                //         child = addDisplyNone(child);
-                //     }
-                // }
                 children.push(child);
             }
         });
@@ -118,7 +112,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         let appearChildren = [];
         const disappearChildren = [];
         if (showProp) {
-            children.forEach((child) => {
+            forEach(children, (child) => {
                 if (!!child.attributes[showProp]) {
                     appearChildren.push(child);
                 } else {
@@ -128,12 +122,12 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         } else {
             appearChildren = children;
         }
-        appearChildren.forEach((child) => {
+        forEach(appearChildren, (child) => {
             if (child) {
                 this.performAppear(child.key);
             }
         });
-        disappearChildren.forEach((child) => {
+        forEach(disappearChildren, (child) => {
             if (child) {
                 this.performDisappear(child.key);
             }
@@ -146,7 +140,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         const props = this.props;
         // exclusive needs immediate response
         if (props.exclusive) {
-            Object.keys(this.currentlyAnimatingKeys).forEach((key) => {
+            forEach(Object.keys(this.currentlyAnimatingKeys), (key) => {
                 this.stop(key);
             });
         }
@@ -158,7 +152,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         // in case destroy in showProp mode
         let newChildren = [];
         if (showProp) {
-            currentChildren.forEach((currentChild) => {
+            forEach(currentChildren, (currentChild) => {
                 const nextChild = currentChild && findChildInChildrenByKey(nextChildren, currentChild.key);
                 let newChild;
                 const tmpChild = nextChild || currentChild;
@@ -173,7 +167,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                     newChildren.push(newChild);
                 }
             });
-            nextChildren.forEach((nextChild) => {
+            forEach(nextChildren, (nextChild) => {
                 if (!nextChild || !findChildInChildrenByKey(currentChildren, nextChild.key)) {
                     newChildren.push(nextChild);
                 }
@@ -190,7 +184,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
             children: newChildren,
         });
 
-        nextChildren.forEach((child) => {
+        forEach(nextChildren, (child) => {
             const key = child && child.key;
             if (child && currentlyAnimatingKeys[key]) {
                 return;
@@ -211,7 +205,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
             }
         });
 
-        currentChildren.forEach((child) => {
+        forEach(currentChildren, (child) => {
             const key = child && child.key;
             if (child && currentlyAnimatingKeys[key]) {
                 return;
@@ -355,38 +349,36 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         this.nextProps = props;
         const stateChildren = this.state.children;
         let children = null;
-        if (stateChildren) {
-            children = stateChildren.map((child) => {
-                if (child === null || child === undefined) {
-                    return child;
-                }
-                if (!child.key) {
-                    throw new Error("must set key for <rc-animate> children");
-                }
-                const refFun = (node) => {
-                    this.childrenRefs[child.key] = node;
-                };
-                const childProps = {
-                    key: child.key,
-                    ref: refFun,
-                    animation: props.animation,
-                    transitionDisappear: props.transitionDisappear,
-                    transitionEnter: props.transitionEnter,
-                    transitionAppear: props.transitionAppear,
-                    transitionName: props.transitionName,
-                    transitionLeave: props.transitionLeave,
-                    displyShow: false,
-                };
-                if (animUtil.isDisplyShow(props, child.attributes)) {
-                    childProps.displyShow = true;
-                }
-                return h(
-                    (AnimateChild as any),
-                    childProps,
-                    child,
-                );
-            });
-        }
+        children = arrayMap(stateChildren, (child) => {
+            if (child === null || child === undefined) {
+                return child;
+            }
+            if (!child.key) {
+                throw new Error("must set key for <rc-animate> children");
+            }
+            const refFun = (node) => {
+                this.childrenRefs[child.key] = node;
+            };
+            const childProps = {
+                key: child.key,
+                ref: refFun,
+                animation: props.animation,
+                transitionDisappear: props.transitionDisappear,
+                transitionEnter: props.transitionEnter,
+                transitionAppear: props.transitionAppear,
+                transitionName: props.transitionName,
+                transitionLeave: props.transitionLeave,
+                displyShow: false,
+            };
+            if (animUtil.isDisplyShow(props, child.attributes)) {
+                childProps.displyShow = true;
+            }
+            return h(
+                (AnimateChild as any),
+                childProps,
+                child,
+            );
+        });
         const _Component = props.component;
         if (_Component) {
             let passedProps: any = props;
@@ -399,6 +391,6 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
             }
             return h(_Component, {...passedProps}, children);
         }
-        return children[0] || null;
+        return children && children[0];
     }
 }
