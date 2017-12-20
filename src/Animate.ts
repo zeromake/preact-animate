@@ -231,10 +231,10 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
     public componentDidUpdate() {
         const keysToEnter = this.keysToEnter;
         this.keysToEnter = [];
-        keysToEnter.forEach(this.performEnter);
+        forEach(keysToEnter, this.performEnter);
         const keysToLeave = this.keysToLeave;
         this.keysToLeave = [];
-        keysToLeave.forEach(this.performLeave);
+        forEach(keysToLeave, this.performLeave);
     }
 
     public performEnter = (key) => {

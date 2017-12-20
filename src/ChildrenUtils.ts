@@ -1,17 +1,24 @@
 import { h } from "preact";
 
-export function forEach(arr: any[] | undefined, callback) {
-    if (!arr) {
-        return;
-    }
-    Array.prototype.forEach.call(arr, callback);
-}
-export function arrayMap(arr: any[] | undefined, callback) {
-    if (!arr) {
+export function arrayMap(children: any[] | undefined, callback: (item: any, index?: number, arr?: any[]) => any, ctx?: any) {
+    if (children == null) {
         return null;
     }
-    Array.prototype.map.call(arr, callback);
+    if (ctx && ctx !== children) {
+        callback = callback.bind(ctx);
+    }
+    return Array.prototype.map.call(children, callback);
 }
+export function forEach(children: any[] | undefined, callback: (item: any, index?: number, arr?: any[]) => any, ctx?: any) {
+    if (children == null) {
+        return null;
+    }
+    if (ctx && ctx !== children) {
+        callback = callback.bind(ctx);
+    }
+    return Array.prototype.forEach.call(children, callback);
+}
+
 export function findChildInChildrenByKey(children, key) {
     let ret = null;
     forEach(children, (child) => {
@@ -92,7 +99,6 @@ export function mergeChildren(prev, next) {
         }
         ret.push(child);
     });
-
     ret = ret.concat(pendingChildren);
 
     return ret;
