@@ -40,7 +40,7 @@ export function addDisplyNone(component: any) {
 export function removeDisplyNone(component: any) {
     const node = findDOMNode(component);
     if (node && node.style) {
-        if (component.displayCss && component.displayCss !== "") {
+        if (component.displayCss && component.displayCss !== "" && component.displayCss !== "none") {
             node.style.display = component.displayCss;
         } else {
             node.style.display = "";
