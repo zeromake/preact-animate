@@ -24,39 +24,53 @@ function __extends(d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 }
 
+function arrayMap(children, callback, ctx) {
+    if (children == null) {
+        return null;
+    }
+    if (ctx && ctx !== children) {
+        callback = callback.bind(ctx);
+    }
+    return Array.prototype.map.call(children, callback);
+}
+function forEach(children, callback, ctx) {
+    if (children == null) {
+        return null;
+    }
+    if (ctx && ctx !== children) {
+        callback = callback.bind(ctx);
+    }
+    return Array.prototype.forEach.call(children, callback);
+}
 function findChildInChildrenByKey(children, key) {
     var ret = null;
-    if (children) {
-        children.forEach(function (child) {
-            if (ret) {
-                return;
-            }
-            if (child && child.key === key) {
-                ret = child;
-            }
-        });
-    }
+    forEach(children, function (child) {
+        if (ret) {
+            return;
+        }
+        if (child && child.key === key) {
+            ret = child;
+        }
+    });
     return ret;
 }
 function findShownChildInChildrenByKey(children, key, showProp) {
     var ret = null;
-    if (children) {
-        children.forEach(function (child) {
-            if (child && child.key === key && child.attributes[showProp]) {
-                if (ret) {
-                    throw new Error("two child with same key for <Animate> children");
-                }
-                ret = child;
+    forEach(children, function (child) {
+        if (child && child.key === key && child.attributes[showProp]) {
+            if (ret) {
+                throw new Error("two child with same key for <Animate> children");
             }
-        });
-    }
+            ret = child;
+        }
+    });
     return ret;
 }
 
 function isSameChildren(c1, c2, showProp) {
     var same = c1.length === c2.length;
     if (same) {
-        c1.forEach(function (child, index) {
+        forEach(c1, function (child, index) {
             var child2 = c2[index];
             if (child && child2) {
                 if ((child && !child2) || (!child && child2)) {
@@ -79,7 +93,7 @@ function mergeChildren(prev, next) {
     // the combined list
     var nextChildrenPending = {};
     var pendingChildren = [];
-    prev.forEach(function (child) {
+    forEach(prev, function (child) {
         if (child && findChildInChildrenByKey(next, child.key)) {
             if (pendingChildren.length) {
                 nextChildrenPending[child.key] = pendingChildren;
@@ -90,7 +104,7 @@ function mergeChildren(prev, next) {
             pendingChildren.push(child);
         }
     });
-    next.forEach(function (child) {
+    forEach(next, function (child) {
         if (child && nextChildrenPending.hasOwnProperty(child.key)) {
             ret = ret.concat(nextChildrenPending[child.key]);
         }
@@ -522,7 +536,7 @@ var defaultKey = "rc_animate_" + Date.now();
 function getChildrenFromProps(props) {
     var children = props.children;
     var newChildren = [];
-    children.forEach(function (child) {
+    forEach(children, function (child) {
         if (isValidElement(child)) {
             if (!child.key) {
                 child = preact.cloneElement(child, {
@@ -626,21 +640,13 @@ var Animate = /** @class */ (function (_super) {
         _this.keysToLeave = [];
         // const tmpChildren = getChildrenFromProps(this.props);
         var children = [];
-        _this.props.children.forEach(function (child) {
+        forEach(_this.props.children, function (child) {
             if (isValidElement(child)) {
                 if (!child.key) {
                     child = preact.cloneElement(child, {
                         key: defaultKey,
                     });
                 }
-                // if (this.props.showProp && (!this.props.disableShow && !child.attributes.disableShow)) {
-                //     const showProp = child.attributes[this.props.showProp];
-                //     if (showProp) {
-                //         child = removeDisplyNone(child);
-                //     } else {
-                //         child = addDisplyNone(child);
-                //     }
-                // }
                 children.push(child);
             }
         });
@@ -657,7 +663,7 @@ var Animate = /** @class */ (function (_super) {
         var appearChildren = [];
         var disappearChildren = [];
         if (showProp) {
-            children.forEach(function (child) {
+            forEach(children, function (child) {
                 if (!!child.attributes[showProp]) {
                     appearChildren.push(child);
                 }
@@ -669,12 +675,12 @@ var Animate = /** @class */ (function (_super) {
         else {
             appearChildren = children;
         }
-        appearChildren.forEach(function (child) {
+        forEach(appearChildren, function (child) {
             if (child) {
                 _this.performAppear(child.key);
             }
         });
-        disappearChildren.forEach(function (child) {
+        forEach(disappearChildren, function (child) {
             if (child) {
                 _this.performDisappear(child.key);
             }
@@ -687,7 +693,7 @@ var Animate = /** @class */ (function (_super) {
         var props = this.props;
         // exclusive needs immediate response
         if (props.exclusive) {
-            Object.keys(this.currentlyAnimatingKeys).forEach(function (key) {
+            forEach(Object.keys(this.currentlyAnimatingKeys), function (key) {
                 _this.stop(key);
             });
         }
@@ -699,7 +705,7 @@ var Animate = /** @class */ (function (_super) {
         // in case destroy in showProp mode
         var newChildren = [];
         if (showProp) {
-            currentChildren.forEach(function (currentChild) {
+            forEach(currentChildren, function (currentChild) {
                 var nextChild = currentChild && findChildInChildrenByKey(nextChildren, currentChild.key);
                 var newChild;
                 var tmpChild = nextChild || currentChild;
@@ -716,7 +722,7 @@ var Animate = /** @class */ (function (_super) {
                 }
                 var _a;
             });
-            nextChildren.forEach(function (nextChild) {
+            forEach(nextChildren, function (nextChild) {
                 if (!nextChild || !findChildInChildrenByKey(currentChildren, nextChild.key)) {
                     newChildren.push(nextChild);
                 }
@@ -729,7 +735,7 @@ var Animate = /** @class */ (function (_super) {
         this.setState({
             children: newChildren,
         });
-        nextChildren.forEach(function (child) {
+        forEach(nextChildren, function (child) {
             var key = child && child.key;
             if (child && currentlyAnimatingKeys[key]) {
                 return;
@@ -751,7 +757,7 @@ var Animate = /** @class */ (function (_super) {
                 _this.keysToEnter.push(key);
             }
         });
-        currentChildren.forEach(function (child) {
+        forEach(currentChildren, function (child) {
             var key = child && child.key;
             if (child && currentlyAnimatingKeys[key]) {
                 return;
@@ -777,10 +783,10 @@ var Animate = /** @class */ (function (_super) {
     Animate.prototype.componentDidUpdate = function () {
         var keysToEnter = this.keysToEnter;
         this.keysToEnter = [];
-        keysToEnter.forEach(this.performEnter);
+        forEach(keysToEnter, this.performEnter);
         var keysToLeave = this.keysToLeave;
         this.keysToLeave = [];
-        keysToLeave.forEach(this.performLeave);
+        forEach(keysToLeave, this.performLeave);
     };
     Animate.prototype.isValidChildByKey = function (currentChildren, key) {
         var showProp = this.props.showProp;
@@ -802,34 +808,32 @@ var Animate = /** @class */ (function (_super) {
         this.nextProps = props;
         var stateChildren = this.state.children;
         var children = null;
-        if (stateChildren) {
-            children = stateChildren.map(function (child) {
-                if (child === null || child === undefined) {
-                    return child;
-                }
-                if (!child.key) {
-                    throw new Error("must set key for <rc-animate> children");
-                }
-                var refFun = function (node) {
-                    _this.childrenRefs[child.key] = node;
-                };
-                var childProps = {
-                    key: child.key,
-                    ref: refFun,
-                    animation: props.animation,
-                    transitionDisappear: props.transitionDisappear,
-                    transitionEnter: props.transitionEnter,
-                    transitionAppear: props.transitionAppear,
-                    transitionName: props.transitionName,
-                    transitionLeave: props.transitionLeave,
-                    displyShow: false,
-                };
-                if (animUtil.isDisplyShow(props, child.attributes)) {
-                    childProps.displyShow = true;
-                }
-                return preact.h(AnimateChild, childProps, child);
-            });
-        }
+        children = arrayMap(stateChildren, function (child) {
+            if (child === null || child === undefined) {
+                return child;
+            }
+            if (!child.key) {
+                throw new Error("must set key for <rc-animate> children");
+            }
+            var refFun = function (node) {
+                _this.childrenRefs[child.key] = node;
+            };
+            var childProps = {
+                key: child.key,
+                ref: refFun,
+                animation: props.animation,
+                transitionDisappear: props.transitionDisappear,
+                transitionEnter: props.transitionEnter,
+                transitionAppear: props.transitionAppear,
+                transitionName: props.transitionName,
+                transitionLeave: props.transitionLeave,
+                displyShow: false,
+            };
+            if (animUtil.isDisplyShow(props, child.attributes)) {
+                childProps.displyShow = true;
+            }
+            return preact.h(AnimateChild, childProps, child);
+        });
         var _Component = props.component;
         if (_Component) {
             var passedProps = props;
@@ -838,7 +842,7 @@ var Animate = /** @class */ (function (_super) {
             }
             return preact.h(_Component, __assign({}, passedProps), children);
         }
-        return children[0] || null;
+        return children && children[0];
     };
     Animate.defaultProps = {
         animation: {},
