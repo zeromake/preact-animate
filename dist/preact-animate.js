@@ -298,7 +298,7 @@ function clearBrowserBugTimeout(node) {
         node.rcEndAnimTimeout = null;
     }
 }
-function cssAnimate(node, transitionName, endCallback) {
+function cssAnimate(node, transitionName, endCallback, isAddEvent) {
     var nameIsObj = typeof transitionName === "undefined" ? "undefined" : typeof transitionName === "object";
     var className = nameIsObj ? transitionName.name : transitionName;
     var activeClassName = nameIsObj ? transitionName.active : transitionName + "-active";
@@ -325,13 +325,17 @@ function cssAnimate(node, transitionName, endCallback) {
         clearBrowserBugTimeout(node);
         nodeClasses.remove(className);
         nodeClasses.remove(activeClassName);
-        TransitionEvents.removeEndEventListener(node, node.rcEndListener);
+        if (isAddEvent) {
+            TransitionEvents.removeEndEventListener(node, node.rcEndListener);
+        }
         node.rcEndListener = null;
         if (end) {
             end();
         }
     };
-    TransitionEvents.addEndEventListener(node, node.rcEndListener);
+    if (isAddEvent) {
+        TransitionEvents.addEndEventListener(node, node.rcEndListener);
+    }
     if (start) {
         start();
     }
@@ -342,8 +346,10 @@ function cssAnimate(node, transitionName, endCallback) {
         if (active) {
             setTimeout(active, 0);
         }
-        fixBrowserByTimeout(node);
-        // 30ms for firefox
+        if (isAddEvent) {
+            fixBrowserByTimeout(node);
+            // 30ms for firefox
+        }
     }, 30);
     return {
         stop: function stop() {
@@ -452,14 +458,17 @@ var AnimateChild = /** @class */ (function (_super) {
             this.transition("enter", done);
         }
         else {
+            this.togglerDisply(true);
             done();
         }
     };
     AnimateChild.prototype.componentWillAppear = function (done) {
         if (animUtil.isAppearSupported(this.props)) {
+            this.togglerDisply(true);
             this.transition("appear", done);
         }
         else {
+            this.togglerDisply(true);
             done();
         }
     };
@@ -488,6 +497,7 @@ var AnimateChild = /** @class */ (function (_super) {
             // always sync, do not interupt with react component life cycle
             // update hidden -> animate hidden ->
             // didUpdate -> animate leave -> unmount (if animate is none)
+            this.togglerDisply(false);
             done();
         }
     };
@@ -509,10 +519,20 @@ var AnimateChild = /** @class */ (function (_super) {
             if (nameIsObj && transitionName[animationType + "Active"]) {
                 activeName = transitionName[animationType + "Active"];
             }
-            this.stopper = cssAnimate(node, {
-                name: name,
-                active: activeName,
-            }, end);
+            var isAnimateEvent = true;
+            var propsEvent = null;
+            if (props.onEnter && animationType === "enter") {
+                isAnimateEvent = false;
+                propsEvent = props.onEnter;
+            }
+            else if (props.onLeave && animationType === "leave") {
+                isAnimateEvent = false;
+                propsEvent = props.onLeave;
+            }
+            this.stopper = cssAnimate(node, { name: name, active: activeName }, end, isAnimateEvent);
+            if (!isAnimateEvent && propsEvent) {
+                propsEvent(this, this.stop.bind(this));
+            }
         }
         else {
             this.stopper = props.animation[animationType](node, end);
@@ -556,15 +576,40 @@ var Animate = /** @class */ (function (_super) {
         var _this = _super.call(this, props, c) || this;
         _this.performEnter = function (key) {
             // may already remove by exclusive
-            if (_this.childrenRefs[key]) {
-                _this.currentlyAnimatingKeys[key] = true;
-                _this.childrenRefs[key].componentWillEnter(_this.handleDoneAdding.bind(_this, key, "enter"));
+            var activeChild = _this.childrenRefs[key];
+            if (activeChild) {
+                _this.currentlyAnimatingKeys[key] = 1;
+                if (_this.props.onBeforeEnter) {
+                    _this.props.onBeforeEnter(activeChild);
+                }
+                activeChild.componentWillEnter(function () {
+                    _this.handleDoneAdding(key, "enter");
+                });
+            }
+        };
+        _this.performLeave = function (key) {
+            // may already remove by exclusive
+            var activeChild = _this.childrenRefs[key];
+            if (activeChild) {
+                _this.currentlyAnimatingKeys[key] = 2;
+                if (_this.props.onBeforeLeave) {
+                    _this.props.onBeforeLeave(activeChild);
+                }
+                activeChild.componentWillLeave(function () {
+                    _this.handleDoneLeaving(key);
+                });
             }
         };
         _this.performAppear = function (key) {
             if (_this.childrenRefs[key]) {
-                _this.currentlyAnimatingKeys[key] = true;
+                _this.currentlyAnimatingKeys[key] = 3;
                 _this.childrenRefs[key].componentWillAppear(_this.handleDoneAdding.bind(_this, key, "appear"));
+            }
+        };
+        _this.performDisappear = function (key) {
+            if (_this.childrenRefs[key]) {
+                _this.currentlyAnimatingKeys[key] = 4;
+                _this.childrenRefs[key].componentWillDisappear(_this.handleDoneLeaving.bind(_this, key));
             }
         };
         _this.handleDoneAdding = function (key, type) {
@@ -582,29 +627,17 @@ var Animate = /** @class */ (function (_super) {
             else {
                 if (type === "appear") {
                     if (animUtil.allowAppearCallback(props)) {
-                        props.onAppear(key);
+                        // props.onAppear(key);
                         props.onEnd(key, true);
                     }
                 }
                 else {
                     if (animUtil.allowEnterCallback(props)) {
-                        props.onEnter(key);
+                        // props.onEnter(key);
+                        _this.callLife(key, props.onAfterEnter);
                         props.onEnd(key, true);
                     }
                 }
-            }
-        };
-        _this.performDisappear = function (key) {
-            if (_this.childrenRefs[key]) {
-                _this.currentlyAnimatingKeys[key] = true;
-                _this.childrenRefs[key].componentWillDisappear(_this.handleDoneLeaving.bind(_this, key));
-            }
-        };
-        _this.performLeave = function (key) {
-            // may already remove by exclusive
-            if (_this.childrenRefs[key]) {
-                _this.currentlyAnimatingKeys[key] = true;
-                _this.childrenRefs[key].componentWillLeave(_this.handleDoneLeaving.bind(_this, key));
             }
         };
         _this.handleDoneLeaving = function (key) {
@@ -622,7 +655,8 @@ var Animate = /** @class */ (function (_super) {
             else {
                 var end = function () {
                     if (animUtil.allowLeaveCallback(props)) {
-                        props.onLeave(key);
+                        // props.onLeave(key);
+                        _this.callLife(key, props.onAfterLeave);
                         props.onEnd(key, false);
                     }
                 };
@@ -788,6 +822,12 @@ var Animate = /** @class */ (function (_super) {
         this.keysToLeave = [];
         forEach(keysToLeave, this.performLeave);
     };
+    Animate.prototype.callLife = function (key, callBack) {
+        if (callBack) {
+            var activeChild = this.childrenRefs[key];
+            callBack(activeChild);
+        }
+    };
     Animate.prototype.isValidChildByKey = function (currentChildren, key) {
         var showProp = this.props.showProp;
         if (showProp) {
@@ -796,10 +836,14 @@ var Animate = /** @class */ (function (_super) {
         return findChildInChildrenByKey(currentChildren, key);
     };
     Animate.prototype.stop = function (key) {
+        var animateStatus = this.currentlyAnimatingKeys[key];
         delete this.currentlyAnimatingKeys[key];
         var component = this.childrenRefs[key];
         if (component) {
             component.stop();
+            if (this.props.onAfterCancelled) {
+                this.props.onAfterCancelled(component, animateStatus);
+            }
         }
     };
     Animate.prototype.render = function () {
@@ -827,6 +871,8 @@ var Animate = /** @class */ (function (_super) {
                 transitionAppear: props.transitionAppear,
                 transitionName: props.transitionName,
                 transitionLeave: props.transitionLeave,
+                onEnter: props.onEnter,
+                onLeave: props.onLeave,
                 displyShow: false,
             };
             if (animUtil.isDisplyShow(props, child.attributes)) {
@@ -845,6 +891,7 @@ var Animate = /** @class */ (function (_super) {
         return children && children[0];
     };
     Animate.defaultProps = {
+        exclusive: true,
         animation: {},
         component: "span",
         componentProps: {},
@@ -853,8 +900,8 @@ var Animate = /** @class */ (function (_super) {
         transitionAppear: false,
         disableShow: false,
         onEnd: noop,
-        onEnter: noop,
-        onLeave: noop,
+        onEnter: null,
+        onLeave: null,
         onAppear: noop,
     };
     return Animate;

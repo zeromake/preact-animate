@@ -1,6 +1,7 @@
 import { Component } from "preact";
 import cssAnimate, { isCssAnimationSupported } from "./css-animation";
 import animUtil from "./util";
+import { forEach } from "./ChildrenUtils";
 
 const transitionMap = {
     enter: "transitionEnter",
@@ -18,6 +19,8 @@ interface IAnimateChildProps {
     transitionLeave: boolean;
     transitionDisappear: boolean;
     displyShow: boolean;
+    onEnter: (child: AnimateChild, callBack: () => void) => void;
+    onLeave: (child: AnimateChild, callBack: () => void) => void;
 }
 
 export default class AnimateChild extends Component<IAnimateChildProps, any> {
@@ -40,14 +43,17 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
             this.togglerDisply(true);
             this.transition("enter", done);
         } else {
+            this.togglerDisply(true);
             done();
         }
     }
 
     public componentWillAppear(done: () => void) {
         if (animUtil.isAppearSupported(this.props)) {
+            this.togglerDisply(true);
             this.transition("appear", done);
         } else {
+            this.togglerDisply(true);
             done();
         }
     }
@@ -72,6 +78,7 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
             // always sync, do not interupt with react component life cycle
             // update hidden -> animate hidden ->
             // didUpdate -> animate leave -> unmount (if animate is none)
+            this.togglerDisply(false);
             done();
         }
     }
@@ -93,10 +100,24 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
             if (nameIsObj && (transitionName as object)[`${animationType}Active`]) {
                 activeName = (transitionName as object)[`${animationType}Active`];
             }
-            this.stopper = cssAnimate(node, {
-                name,
-                active: activeName,
-            }, end);
+            let isAnimateEvent = true;
+            let propsEvent: ((child: AnimateChild, callBack: () => void) => void) | null = null;
+            if (props.onEnter && animationType === "enter") {
+                isAnimateEvent = false;
+                propsEvent = props.onEnter;
+            } else if (props.onLeave && animationType === "leave") {
+                isAnimateEvent = false;
+                propsEvent = props.onLeave;
+            }
+            this.stopper = cssAnimate(
+                node,
+                { name, active: activeName },
+                end,
+                isAnimateEvent,
+            );
+            if (!isAnimateEvent && propsEvent) {
+                propsEvent(this, this.stop.bind(this));
+            }
         } else {
             this.stopper = props.animation[animationType](node, end);
         }

@@ -43,14 +43,19 @@ interface IAnimateProps {
     transitionDisappear: boolean;
     exclusive: boolean;
     onEnd: (key: string, exists: boolean) => void;
-    onEnter: (key: string) => void;
-    onLeave: (key: string) => void;
+    onEnter: (child: AnimateChild, callBack: () => void) => void;
+    onLeave: (child: AnimateChild, callBack: () => void) => void;
     onAppear: (key: string) => void;
     showProp: string;
     disableShow?: boolean;
     className?: string;
     style?: string|object;
     children: any[];
+    onAfterCancelled?: (child: AnimateChild, status: number) => any;
+    onBeforeLeave?: (child: AnimateChild) => any;
+    onAfterLeave?: (child: AnimateChild) => any;
+    onBeforeEnter?: (child: AnimateChild) => any;
+    onAfterEnter?: (child: AnimateChild) => any;
 }
 interface IAnimateState {
     children: any[];
@@ -58,7 +63,7 @@ interface IAnimateState {
 
 export default class Animate extends Component<IAnimateProps, IAnimateState> {
     public currentlyAnimatingKeys: {
-        [key: string]: boolean;
+        [key: string]: number;
     };
     public keysToEnter: string[];
     public keysToLeave: string[];
@@ -68,6 +73,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
     public nextProps;
 
     public static defaultProps = {
+        exclusive: true,
         animation: {},
         component: "span",
         componentProps: {},
@@ -76,8 +82,8 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         transitionAppear: false,
         disableShow: false,
         onEnd: noop,
-        onEnter: noop,
-        onLeave: noop,
+        onEnter: null,
+        onLeave: null,
         onAppear: noop,
     };
 
@@ -239,24 +245,56 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
 
     public performEnter = (key) => {
         // may already remove by exclusive
-        if (this.childrenRefs[key]) {
-            this.currentlyAnimatingKeys[key] = true;
-            this.childrenRefs[key].componentWillEnter(
-                this.handleDoneAdding.bind(this, key, "enter"),
-            );
+        const activeChild = this.childrenRefs[key];
+        if (activeChild) {
+            this.currentlyAnimatingKeys[key] = 1;
+            if (this.props.onBeforeEnter) {
+                this.props.onBeforeEnter(activeChild);
+            }
+            activeChild.componentWillEnter(() => {
+                this.handleDoneAdding(key, "enter");
+            });
+        }
+    }
+
+    public performLeave = (key) => {
+        // may already remove by exclusive
+        const activeChild = this.childrenRefs[key];
+        if (activeChild) {
+            this.currentlyAnimatingKeys[key] = 2;
+            if (this.props.onBeforeLeave) {
+                this.props.onBeforeLeave(activeChild);
+            }
+            activeChild.componentWillLeave(() => {
+                this.handleDoneLeaving(key);
+            });
         }
     }
 
     public performAppear = (key) => {
         if (this.childrenRefs[key]) {
-            this.currentlyAnimatingKeys[key] = true;
+            this.currentlyAnimatingKeys[key] = 3;
             this.childrenRefs[key].componentWillAppear(
                 this.handleDoneAdding.bind(this, key, "appear"),
             );
         }
     }
 
-    public handleDoneAdding = (key, type) => {
+    public performDisappear = (key) => {
+        if (this.childrenRefs[key]) {
+            this.currentlyAnimatingKeys[key] = 4;
+            this.childrenRefs[key].componentWillDisappear(this.handleDoneLeaving.bind(this, key));
+        }
+    }
+
+    private callLife(key: string, callBack) {
+        if (callBack) {
+            const activeChild = this.childrenRefs[key];
+            callBack(activeChild);
+        }
+    }
+
+    public handleDoneAdding = (key: string, type: string) => {
         const props = this.props;
         delete this.currentlyAnimatingKeys[key];
         // if update on exclusive mode, skip check
@@ -270,28 +308,16 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         } else {
             if (type === "appear") {
                 if (animUtil.allowAppearCallback(props)) {
-                    props.onAppear(key);
+                    // props.onAppear(key);
                     props.onEnd(key, true);
                 }
             } else {
                 if (animUtil.allowEnterCallback(props)) {
-                    props.onEnter(key);
+                    // props.onEnter(key);
+                    this.callLife(key, props.onAfterEnter);
                     props.onEnd(key, true);
                 }
             }
-        }
-    }
-    public performDisappear = (key) => {
-        if (this.childrenRefs[key]) {
-            this.currentlyAnimatingKeys[key] = true;
-            this.childrenRefs[key].componentWillDisappear(this.handleDoneLeaving.bind(this, key));
-        }
-    }
-    public performLeave = (key) => {
-        // may already remove by exclusive
-        if (this.childrenRefs[key]) {
-            this.currentlyAnimatingKeys[key] = true;
-            this.childrenRefs[key].componentWillLeave(this.handleDoneLeaving.bind(this, key));
         }
     }
 
@@ -309,7 +335,8 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         } else {
             const end = () => {
                 if (animUtil.allowLeaveCallback(props)) {
-                    props.onLeave(key);
+                    // props.onLeave(key);
+                    this.callLife(key, props.onAfterLeave);
                     props.onEnd(key, false);
                 }
             };
@@ -337,10 +364,14 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
     }
 
     public stop(key: string) {
+        const animateStatus = this.currentlyAnimatingKeys[key];
         delete this.currentlyAnimatingKeys[key];
         const component = this.childrenRefs[key];
         if (component) {
             component.stop();
+            if (this.props.onAfterCancelled) {
+                this.props.onAfterCancelled(component, animateStatus);
+            }
         }
     }
 
@@ -368,6 +399,8 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                 transitionAppear: props.transitionAppear,
                 transitionName: props.transitionName,
                 transitionLeave: props.transitionLeave,
+                onEnter: props.onEnter,
+                onLeave: props.onLeave,
                 displyShow: false,
             };
             if (animUtil.isDisplyShow(props, child.attributes)) {

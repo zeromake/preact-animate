@@ -50,7 +50,12 @@ function clearBrowserBugTimeout(node) {
         node.rcEndAnimTimeout = null;
     }
 }
-function cssAnimate(node: Element | HTMLElement, transitionName: string | ITransition, endCallback: voidFun | IEndCall): { stop: voidFun } {
+function cssAnimate(
+    node: Element | HTMLElement,
+    transitionName: string | ITransition,
+    endCallback: voidFun | IEndCall,
+    isAddEvent: boolean,
+): { stop: voidFun } {
     const nameIsObj = typeof transitionName === "undefined" ? "undefined" : typeof transitionName === "object";
     const className = nameIsObj ? (transitionName as ITransition).name : (transitionName as string);
     const activeClassName = nameIsObj ? (transitionName as ITransition).active : transitionName + "-active";
@@ -78,13 +83,17 @@ function cssAnimate(node: Element | HTMLElement, transitionName: string | ITrans
         clearBrowserBugTimeout(node);
         nodeClasses.remove(className);
         nodeClasses.remove(activeClassName);
-        Event.removeEndEventListener(node, (node as any).rcEndListener);
+        if (isAddEvent) {
+            Event.removeEndEventListener(node, (node as any).rcEndListener);
+        }
         (node as any).rcEndListener = null;
         if (end) {
             (end as voidFun)();
         }
     };
-    Event.addEndEventListener(node, (node as any).rcEndListener);
+    if (isAddEvent) {
+        Event.addEndEventListener(node, (node as any).rcEndListener);
+    }
     if (start) {
         start();
     }
@@ -95,8 +104,11 @@ function cssAnimate(node: Element | HTMLElement, transitionName: string | ITrans
         if (active) {
             setTimeout(active, 0);
         }
-        fixBrowserByTimeout(node);
-        // 30ms for firefox
+
+        if (isAddEvent) {
+            fixBrowserByTimeout(node);
+            // 30ms for firefox
+        }
     }, 30);
     return {
         stop: function stop() {
