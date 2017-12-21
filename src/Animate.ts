@@ -73,7 +73,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
     public nextProps;
 
     public static defaultProps = {
-        exclusive: true,
+        exclusive: false,
         animation: {},
         component: "span",
         componentProps: {},
