@@ -84,7 +84,11 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
     }
 
     private transition(animationType: string, finishCallback: () => void) {
-        const node = animUtil.findDOMNode(this);
+        const node: HTMLElement = animUtil.findDOMNode(this);
+        if (node.nodeType === 3) {
+            finishCallback();
+            return;
+        }
         const props = this.props;
         const transitionName = props.transitionName;
         const nameIsObj = typeof transitionName === "object";
