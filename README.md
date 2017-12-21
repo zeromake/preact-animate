@@ -32,7 +32,7 @@ preact.render(
     <thead>
     <tr>
         <th style="width: 100px;">name</th>
-        <th style="width: 50px;">type</th>
+        <th>type</th>
         <th style="width: 50px;">default</th>
         <th>description</th>
     </tr>
@@ -132,7 +132,7 @@ preact.render(
          <td>onAfterCancelled</td>
          <td>function(child: AnimateChild, status: number) => any</td>
          <td>null</td>
-         <td>animation after cancelled Leave life props.exclusive is true</td>
+         <td>animation after cancelled Leave life</td>
        </tr>
        <tr>
          <td>animation</td>
@@ -172,7 +172,7 @@ with appear, enter and leave as keys. for example:
           // jq will call done on finish
           $(node).stop(true);
         }
-      };              
+      };
     }
   }
 ```

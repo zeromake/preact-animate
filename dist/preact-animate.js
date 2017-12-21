@@ -137,6 +137,24 @@ function isChildrenShow(child, children, showProp, key) {
     }
     return status;
 }
+// export function isAnimateShow(child, children, showProp, key) {
+//     const has = child && findChildInChildrenByKey(children, key);
+//     let status = false;
+//     if (showProp) {
+//         const showInNow = child.attributes[showProp];
+//         if (has) {
+//             const showInNext = findShownChildInChildrenByKey(children, key, showProp);
+//             if (showInNext && showInNow) {
+//                 status = true;
+//             }
+//         } else if (showInNow) {
+//             status = true;
+//         }
+//     } else if (!has) {
+//         status = true;
+//     }
+//     return status;
+// }
 
 var re = /\s+/;
 var toString = Object.prototype.toString;
@@ -771,7 +789,6 @@ var Animate = /** @class */ (function (_super) {
         // last props children if exclusive
         var currentChildren = props.exclusive ?
             getChildrenFromProps(props) : this.state.children;
-        console.log(currentChildren, nextChildren);
         // in case destroy in showProp mode
         var newChildren = [];
         if (showProp) {
@@ -811,7 +828,6 @@ var Animate = /** @class */ (function (_super) {
                 var status = currentlyAnimatingKeys[key];
                 if (status === AnimateType.leave || status === AnimateType.disappear) {
                     if (isChildrenShow(child, currentChildren, showProp, key)) {
-                        // console.log("stop Enter", child, currentChildren);
                         _this.stop(key);
                         _this.keysToEnter.push(key);
                     }
@@ -828,7 +844,6 @@ var Animate = /** @class */ (function (_super) {
                 var status = currentlyAnimatingKeys[key];
                 if (status === AnimateType.enter || status === AnimateType.appear) {
                     if (isChildrenShow(child, nextChildren, showProp, key)) {
-                        console.log("stop Leave", child, nextChildren);
                         _this.stop(key);
                         _this.keysToLeave.push(key);
                     }

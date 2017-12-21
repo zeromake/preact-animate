@@ -163,7 +163,6 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         // last props children if exclusive
         const currentChildren = props.exclusive ?
             getChildrenFromProps(props) : this.state.children;
-        console.log(currentChildren, nextChildren);
         // in case destroy in showProp mode
         let newChildren = [];
         if (showProp) {
