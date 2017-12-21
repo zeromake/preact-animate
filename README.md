@@ -92,14 +92,56 @@ preact.render(
          <td>true</td>
          <td>animation end callback</td>
        </tr>
-        <tr>
-          <td>animation</td>
-          <td>Object</td>
-          <td>{}</td>
-          <td>
+       <tr>
+         <td>onBeforeEnter</td>
+         <td>function(child: AnimateChild) => void;</td>
+         <td>null</td>
+         <td>animation before Enter life</td>
+       </tr>
+       <tr>
+         <td>onEnter</td>
+         <td>function(child: AnimateChild, callBack: () => void) => void;</td>
+         <td>null</td>
+         <td>animation Enter life must called `callBack`</td>
+       </tr>
+       <tr>
+         <td>onAfterEnter</td>
+         <td>function(child: AnimateChild) => void;</td>
+         <td>null</td>
+         <td>animation after Enter life</td>
+       </tr>
+       <tr>
+         <td>onBeforeLeave</td>
+         <td>function(child: AnimateChild) => void;</td>
+         <td>null</td>
+         <td>animation before Leave life</td>
+       </tr>
+       <tr>
+         <td>onLeave</td>
+         <td>function(child: AnimateChild, callBack: () => void) => void;</td>
+         <td>null</td>
+         <td>animation Leave life must called `callBack`</td>
+       </tr>
+       <tr>
+         <td>onAfterLeave</td>
+         <td>function(child: AnimateChild) => void;</td>
+         <td>null</td>
+         <td>animation after Leave life</td>
+       </tr>
+       <tr>
+         <td>onAfterCancelled</td>
+         <td>function(child: AnimateChild, status: number) => any</td>
+         <td>null</td>
+         <td>animation after cancelled Leave life props.exclusive is true</td>
+       </tr>
+       <tr>
+         <td>animation</td>
+         <td>Object</td>
+         <td>{}</td>
+         <td>
             to animate with js. see animation format below.
-          </td>
-        </tr>
+         </td>
+       </tr>
     </tbody>
 </table>
 

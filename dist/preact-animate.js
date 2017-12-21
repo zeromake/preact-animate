@@ -117,6 +117,26 @@ var VNode = preact.h("a", null).constructor;
 function isValidElement(element) {
     return element && (element instanceof VNode);
 }
+function isChildrenShow(child, children, showProp, key) {
+    var has = child && findChildInChildrenByKey(children, key);
+    var status = false;
+    if (showProp) {
+        var showInNow = child.attributes[showProp];
+        if (has) {
+            var showInNext = findShownChildInChildrenByKey(children, key, showProp);
+            if (!showInNext && showInNow) {
+                status = true;
+            }
+        }
+        else if (showInNow) {
+            status = true;
+        }
+    }
+    else if (!has) {
+        status = true;
+    }
+    return status;
+}
 
 var re = /\s+/;
 var toString = Object.prototype.toString;
@@ -509,8 +529,10 @@ var AnimateChild = /** @class */ (function (_super) {
         var nameIsObj = typeof transitionName === "object";
         this.stop();
         var end = function () {
-            _this.stopper = null;
-            finishCallback();
+            if (_this.stopper) {
+                _this.stopper = null;
+                finishCallback();
+            }
         };
         if ((isCssAnimationSupported || !props.animation[animationType]) &&
             transitionName && props[transitionMap[animationType]]) {
@@ -553,6 +575,13 @@ var AnimateChild = /** @class */ (function (_super) {
 
 // import PropTypes from "prop-types";
 var defaultKey = "rc_animate_" + Date.now();
+var AnimateType;
+(function (AnimateType) {
+    AnimateType[AnimateType["enter"] = 1] = "enter";
+    AnimateType[AnimateType["leave"] = 2] = "leave";
+    AnimateType[AnimateType["appear"] = 3] = "appear";
+    AnimateType[AnimateType["disappear"] = 4] = "disappear";
+})(AnimateType || (AnimateType = {}));
 function getChildrenFromProps(props) {
     var children = props.children;
     var newChildren = [];
@@ -578,12 +607,12 @@ var Animate = /** @class */ (function (_super) {
             // may already remove by exclusive
             var activeChild = _this.childrenRefs[key];
             if (activeChild) {
-                _this.currentlyAnimatingKeys[key] = 1;
+                _this.currentlyAnimatingKeys[key] = AnimateType.enter;
                 if (_this.props.onBeforeEnter) {
                     _this.props.onBeforeEnter(activeChild);
                 }
                 activeChild.componentWillEnter(function () {
-                    _this.handleDoneAdding(key, "enter");
+                    _this.handleDoneAdding(key, AnimateType.enter);
                 });
             }
         };
@@ -591,25 +620,29 @@ var Animate = /** @class */ (function (_super) {
             // may already remove by exclusive
             var activeChild = _this.childrenRefs[key];
             if (activeChild) {
-                _this.currentlyAnimatingKeys[key] = 2;
+                _this.currentlyAnimatingKeys[key] = AnimateType.leave;
                 if (_this.props.onBeforeLeave) {
                     _this.props.onBeforeLeave(activeChild);
                 }
                 activeChild.componentWillLeave(function () {
-                    _this.handleDoneLeaving(key);
+                    _this.handleDoneLeaving(key, AnimateType.leave);
                 });
             }
         };
         _this.performAppear = function (key) {
             if (_this.childrenRefs[key]) {
-                _this.currentlyAnimatingKeys[key] = 3;
-                _this.childrenRefs[key].componentWillAppear(_this.handleDoneAdding.bind(_this, key, "appear"));
+                _this.currentlyAnimatingKeys[key] = AnimateType.appear;
+                _this.childrenRefs[key].componentWillAppear(function () {
+                    _this.handleDoneAdding(key, AnimateType.appear);
+                });
             }
         };
         _this.performDisappear = function (key) {
             if (_this.childrenRefs[key]) {
-                _this.currentlyAnimatingKeys[key] = 4;
-                _this.childrenRefs[key].componentWillDisappear(_this.handleDoneLeaving.bind(_this, key));
+                _this.currentlyAnimatingKeys[key] = AnimateType.disappear;
+                _this.childrenRefs[key].componentWillDisappear(function () {
+                    _this.handleDoneLeaving(key, AnimateType.disappear);
+                });
             }
         };
         _this.handleDoneAdding = function (key, type) {
@@ -625,7 +658,7 @@ var Animate = /** @class */ (function (_super) {
                 _this.performLeave(key);
             }
             else {
-                if (type === "appear") {
+                if (type === AnimateType.appear) {
                     if (animUtil.allowAppearCallback(props)) {
                         // props.onAppear(key);
                         props.onEnd(key, true);
@@ -640,7 +673,7 @@ var Animate = /** @class */ (function (_super) {
                 }
             }
         };
-        _this.handleDoneLeaving = function (key) {
+        _this.handleDoneLeaving = function (key, type) {
             var props = _this.props;
             delete _this.currentlyAnimatingKeys[key];
             // if update on exclusive mode, skip check
@@ -653,11 +686,13 @@ var Animate = /** @class */ (function (_super) {
                 _this.performEnter(key);
             }
             else {
+                var activeChild_1 = _this.childrenRefs[key];
                 var end = function () {
-                    if (animUtil.allowLeaveCallback(props)) {
-                        // props.onLeave(key);
-                        _this.callLife(key, props.onAfterLeave);
-                        props.onEnd(key, false);
+                    if (type === AnimateType.leave) {
+                        if (animUtil.allowLeaveCallback(props)) {
+                            _this.callLife(key, props.onAfterLeave, activeChild_1);
+                            props.onEnd(key, false);
+                        }
                     }
                 };
                 if (!isSameChildren(_this.state.children, currentChildren, props.showProp)) {
@@ -736,6 +771,7 @@ var Animate = /** @class */ (function (_super) {
         // last props children if exclusive
         var currentChildren = props.exclusive ?
             getChildrenFromProps(props) : this.state.children;
+        console.log(currentChildren, nextChildren);
         // in case destroy in showProp mode
         var newChildren = [];
         if (showProp) {
@@ -772,44 +808,34 @@ var Animate = /** @class */ (function (_super) {
         forEach(nextChildren, function (child) {
             var key = child && child.key;
             if (child && currentlyAnimatingKeys[key]) {
-                return;
-            }
-            var hasPrev = child && findChildInChildrenByKey(currentChildren, key);
-            if (showProp) {
-                var showInNext = child.attributes[showProp];
-                if (hasPrev) {
-                    var showInNow = findShownChildInChildrenByKey(currentChildren, key, showProp);
-                    if (!showInNow && showInNext) {
+                var status = currentlyAnimatingKeys[key];
+                if (status === AnimateType.leave || status === AnimateType.disappear) {
+                    if (isChildrenShow(child, currentChildren, showProp, key)) {
+                        // console.log("stop Enter", child, currentChildren);
+                        _this.stop(key);
                         _this.keysToEnter.push(key);
                     }
                 }
-                else if (showInNext) {
-                    _this.keysToEnter.push(key);
-                }
+                return;
             }
-            else if (!hasPrev) {
+            if (isChildrenShow(child, currentChildren, showProp, key)) {
                 _this.keysToEnter.push(key);
             }
         });
         forEach(currentChildren, function (child) {
             var key = child && child.key;
             if (child && currentlyAnimatingKeys[key]) {
-                return;
-            }
-            var hasNext = child && findChildInChildrenByKey(nextChildren, key);
-            if (showProp) {
-                var showInNow = child.attributes[showProp];
-                if (hasNext) {
-                    var showInNext = findShownChildInChildrenByKey(nextChildren, key, showProp);
-                    if (!showInNext && showInNow) {
+                var status = currentlyAnimatingKeys[key];
+                if (status === AnimateType.enter || status === AnimateType.appear) {
+                    if (isChildrenShow(child, nextChildren, showProp, key)) {
+                        console.log("stop Leave", child, nextChildren);
+                        _this.stop(key);
                         _this.keysToLeave.push(key);
                     }
                 }
-                else if (showInNow) {
-                    _this.keysToLeave.push(key);
-                }
+                return;
             }
-            else if (!hasNext) {
+            if (isChildrenShow(child, nextChildren, showProp, key)) {
                 _this.keysToLeave.push(key);
             }
         });
@@ -822,10 +848,10 @@ var Animate = /** @class */ (function (_super) {
         this.keysToLeave = [];
         forEach(keysToLeave, this.performLeave);
     };
-    Animate.prototype.callLife = function (key, callBack) {
+    Animate.prototype.callLife = function (key, callBack, child) {
         if (callBack) {
             var activeChild = this.childrenRefs[key];
-            callBack(activeChild);
+            callBack(activeChild || child);
         }
     };
     Animate.prototype.isValidChildByKey = function (currentChildren, key) {
@@ -891,7 +917,7 @@ var Animate = /** @class */ (function (_super) {
         return children && children[0];
     };
     Animate.defaultProps = {
-        exclusive: true,
+        exclusive: false,
         animation: {},
         component: "span",
         componentProps: {},

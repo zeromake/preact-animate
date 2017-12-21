@@ -90,8 +90,10 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
         const nameIsObj = typeof transitionName === "object";
         this.stop();
         const end = () => {
-            this.stopper = null;
-            finishCallback();
+            if (this.stopper) {
+                this.stopper = null;
+                finishCallback();
+            }
         };
         if ((isCssAnimationSupported || !props.animation[animationType]) &&
                 transitionName && props[transitionMap[animationType]]) {

@@ -109,3 +109,41 @@ const VNode = h("a", null).constructor;
 export function isValidElement(element) {
     return element && (element instanceof VNode);
 }
+
+export function isChildrenShow(child, children, showProp, key) {
+    const has = child && findChildInChildrenByKey(children, key);
+    let status = false;
+    if (showProp) {
+        const showInNow = child.attributes[showProp];
+        if (has) {
+            const showInNext = findShownChildInChildrenByKey(children, key, showProp);
+            if (!showInNext && showInNow) {
+                status = true;
+            }
+        } else if (showInNow) {
+            status = true;
+        }
+    } else if (!has) {
+        status = true;
+    }
+    return status;
+}
+
+// export function isAnimateShow(child, children, showProp, key) {
+//     const has = child && findChildInChildrenByKey(children, key);
+//     let status = false;
+//     if (showProp) {
+//         const showInNow = child.attributes[showProp];
+//         if (has) {
+//             const showInNext = findShownChildInChildrenByKey(children, key, showProp);
+//             if (showInNext && showInNow) {
+//                 status = true;
+//             }
+//         } else if (showInNow) {
+//             status = true;
+//         }
+//     } else if (!has) {
+//         status = true;
+//     }
+//     return status;
+// }

@@ -35,7 +35,8 @@
             constructor() {
                 super();
                 this.state = {
-                    show: false
+                    show: false,
+                    show1: true,
                 }
                 this.test = this.test.bind(this);
                 this.test2 = this.test2.bind(this);
@@ -47,20 +48,19 @@
                 })
             }
             test2() {
-                console.log(this.state)
                 this.setState({
-                    show: this.state.show
+                    show1: !this.state.show1
                 })
             }
-            test3(key) {
-                console.log(key)
+            test3(component, key) {
+                console.log(key, component.base)
             }
             test4(component, done) {
                 console.log("onLeave");
                 setTimeout(done, 10000)
             }
             onAfterCancelled(component, type) {
-                console.log("onAfterCancelled: ", type);
+                console.log("onAfterCancelled: ", component.base, type);
             }
             render() {
                 return h(
@@ -79,22 +79,21 @@
                     h(
                         Animate,
                         {
-                            component: null,
+                            component: 'p',
                             transitionEnter: true,
                             transitionLeave: true,
                             onAfterCancelled: this.onAfterCancelled,
-                            onBeforeLeave: () => this.test3("BeforeLeave"),
-                            onAfterLeave: () => this.test3("AfterLeave"),
-                            onBeforeEnter: () => this.test3("BeforeEnter"),
-                            onAfterEnter: () => this.test3("AfterEnter"),
-                            onLeave: this.test4,
+                            onBeforeLeave: (component) => this.test3(component, "BeforeLeave"),
+                            onAfterLeave: (component) => this.test3(component, "AfterLeave"),
+                            onBeforeEnter: (component) => this.test3(component, "BeforeEnter"),
+                            onAfterEnter: (component) => this.test3(component, "AfterEnter"),
                             showProp: "data-show",
                             transitionName: {
                                 enter: "tada",
                                 leave: "bounceOutRight"
                             }
                         },
-                        // h(test, {name: '测试1', key: 1, 'data-show': this.state.show}),
+                        h(test, {name: '测试1', key: 1, 'data-show': this.state.show1 && this.state.show}),
                         h(test, {name: '测试2', key: 2, 'data-show': !this.state.show})
                     )
                 )
