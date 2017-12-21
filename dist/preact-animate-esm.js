@@ -536,6 +536,10 @@ var AnimateChild = /** @class */ (function (_super) {
     AnimateChild.prototype.transition = function (animationType, finishCallback) {
         var _this = this;
         var node = animUtil.findDOMNode(this);
+        if (node.nodeType === 3) {
+            finishCallback();
+            return;
+        }
         var props = this.props;
         var transitionName = props.transitionName;
         var nameIsObj = typeof transitionName === "object";
