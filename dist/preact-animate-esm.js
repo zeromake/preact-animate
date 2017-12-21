@@ -469,7 +469,9 @@ var transitionMap = {
 var AnimateChild = /** @class */ (function (_super) {
     __extends(AnimateChild, _super);
     function AnimateChild() {
-        return _super !== null && _super.apply(this, arguments) || this;
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.transitionName = null;
+        return _this;
     }
     AnimateChild.prototype.componentWillUnmount = function () {
         this.stop();
@@ -541,7 +543,11 @@ var AnimateChild = /** @class */ (function (_super) {
             return;
         }
         var props = this.props;
-        var transitionName = props.transitionName;
+        var childTransitionName = (props.children &&
+            props.children[0] &&
+            props.children[0].attributes &&
+            props.children[0].attributes.transitionName);
+        var transitionName = childTransitionName || props.transitionName;
         var nameIsObj = typeof transitionName === "object";
         this.stop();
         var end = function () {

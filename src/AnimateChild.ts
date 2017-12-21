@@ -26,6 +26,7 @@ interface IAnimateChildProps {
 export default class AnimateChild extends Component<IAnimateChildProps, any> {
     public stopper: null | { stop: () => void};
     public displayCss: string | undefined;
+    public transitionName: any = null;
     public componentWillUnmount() {
         this.stop();
     }
@@ -90,7 +91,13 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
             return;
         }
         const props = this.props;
-        const transitionName = props.transitionName;
+        const childTransitionName = (
+            props.children &&
+            props.children[0] &&
+            props.children[0].attributes &&
+            props.children[0].attributes.transitionName
+        );
+        const transitionName = childTransitionName || props.transitionName;
         const nameIsObj = typeof transitionName === "object";
         this.stop();
         const end = () => {

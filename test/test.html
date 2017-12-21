@@ -79,7 +79,7 @@
                     h(
                         Animate,
                         {
-                            component: 'p',
+                            component: "p",
                             transitionEnter: true,
                             transitionLeave: true,
                             onAfterCancelled: this.onAfterCancelled,
@@ -93,7 +93,10 @@
                                 leave: "bounceOutRight"
                             }
                         },
-                        h(test, {name: '测试1', key: 1, 'data-show': this.state.show1 && this.state.show}),
+                        h(test, {name: '测试1', key: 1, 'data-show': this.state.show1 && this.state.show, transitionName: {
+                            enter: "fadeInLeft",
+                            leave: "fadeOutLeft"
+                        }}),
                         h(test, {name: '测试2', key: 2, 'data-show': !this.state.show})
                     )
                 )
