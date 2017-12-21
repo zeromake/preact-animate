@@ -103,7 +103,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         this.keysToLeave = [];
         // const tmpChildren = getChildrenFromProps(this.props);
         const children = [];
-        forEach(this.props.children, (child) => {
+        forEach(props.children, (child) => {
             if (isValidElement(child)) {
                 if (!child.key) {
                     child = cloneElement(child, {

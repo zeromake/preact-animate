@@ -40,7 +40,7 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
         }
     }
     public componentWillEnter(done: () => void) {
-        if (animUtil.isEnterSupported(this.props)) {
+        if (animUtil.isEnterSupported(this.props, this.transitionName)) {
             this.togglerDisply(true);
             this.transition("enter", done);
         } else {
@@ -50,7 +50,7 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
     }
 
     public componentWillAppear(done: () => void) {
-        if (animUtil.isAppearSupported(this.props)) {
+        if (animUtil.isAppearSupported(this.props, this.transitionName)) {
             this.togglerDisply(true);
             this.transition("appear", done);
         } else {
@@ -59,7 +59,7 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
         }
     }
     public componentWillDisappear(done: () => void) {
-        if (animUtil.isDisappearSupported(this.props)) {
+        if (animUtil.isDisappearSupported(this.props, this.transitionName)) {
             this.transition("disappear", () => {
                 this.togglerDisply(false);
                 done();
@@ -70,7 +70,7 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
         }
     }
     public componentWillLeave(done: () => void) {
-        if (animUtil.isLeaveSupported(this.props)) {
+        if (animUtil.isLeaveSupported(this.props, this.transitionName)) {
             this.transition("leave", () => {
                 this.togglerDisply(false);
                 done();
@@ -91,13 +91,7 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
             return;
         }
         const props = this.props;
-        const childTransitionName = (
-            props.children &&
-            props.children[0] &&
-            props.children[0].attributes &&
-            props.children[0].attributes.transitionName
-        );
-        const transitionName = childTransitionName || props.transitionName;
+        const transitionName = this.transitionName || props.transitionName;
         const nameIsObj = typeof transitionName === "object";
         this.stop();
         const end = () => {
@@ -145,6 +139,9 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
     }
 
     public render() {
-        return this.props.children && this.props.children[0];
+        const props = this.props;
+        const child = props.children && props.children[0];
+        this.transitionName = child.attributes && child.attributes.transitionName;
+        return child;
     }
 }

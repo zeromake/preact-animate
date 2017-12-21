@@ -1,16 +1,16 @@
 import preact, { Component } from "preact";
 
-export function isAppearSupported(props: any) {
-    return props.transitionName && props.transitionAppear || props.animation.appear;
+export function isAppearSupported(props: any, transitionName: any) {
+    return (transitionName || props.transitionName) && props.transitionAppear || props.animation.appear;
 }
-export function isEnterSupported(props: any) {
-    return props.transitionName && props.transitionEnter || props.animation.enter;
+export function isEnterSupported(props: any, transitionName: any) {
+    return (transitionName || props.transitionName) && props.transitionEnter || props.animation.enter;
 }
-export function isLeaveSupported(props: any) {
-    return props.transitionName && props.transitionLeave || props.animation.leave;
+export function isLeaveSupported(props: any, transitionName: any) {
+    return (transitionName || props.transitionName) && props.transitionLeave || props.animation.leave;
 }
-export function isDisappearSupported(props: any) {
-    return props.transitionName && props.transitionDisappear || props.animation.disappear;
+export function isDisappearSupported(props: any, transitionName: any) {
+    return (transitionName || props.transitionName) && props.transitionDisappear || props.animation.disappear;
 }
 export function allowAppearCallback(props: any) {
     return props.transitionAppear || props.animation.appear;
