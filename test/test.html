@@ -87,22 +87,22 @@
                             onAfterLeave: (component) => this.test3(component, "AfterLeave"),
                             onBeforeEnter: (component) => this.test3(component, "BeforeEnter"),
                             onAfterEnter: (component) => this.test3(component, "AfterEnter"),
-                            showProp: "data-show",
-                            transitionName: {
-                                enter: "tada",
-                                leave: "bounceOutRight"
-                            }
+                            showProp: "data-show"
                         },
                         h(test, {name: '测试1', key: 1, 'data-show': this.state.show1 && this.state.show, transitionName: {
                             enter: "fadeInLeft",
                             leave: "fadeOutLeft"
                         }}),
-                        h(test, {name: '测试2', key: 2, 'data-show': !this.state.show})
+                        h(test, {name: '测试2', key: 2, 'data-show': !this.state.show, transitionName: {
+                                enter: "tada",
+                                leave: "bounceOutRight"
+                            }})
                     )
                 )
             }
         }
         render(h(App), document.getElementById('app'))
     </script>
+    <script src="../node_modules/preact/devtools.js"></script>
 </body>
 </html>

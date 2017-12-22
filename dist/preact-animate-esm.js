@@ -393,17 +393,17 @@ function cssAnimate(node, transitionName, endCallback, isAddEvent) {
 }
 cssAnimate.isCssAnimationSupported = isCssAnimationSupported;
 
-function isAppearSupported(props) {
-    return props.transitionName && props.transitionAppear || props.animation.appear;
+function isAppearSupported(props, transitionName) {
+    return (transitionName || props.transitionName) && props.transitionAppear || props.animation.appear;
 }
-function isEnterSupported(props) {
-    return props.transitionName && props.transitionEnter || props.animation.enter;
+function isEnterSupported(props, transitionName) {
+    return (transitionName || props.transitionName) && props.transitionEnter || props.animation.enter;
 }
-function isLeaveSupported(props) {
-    return props.transitionName && props.transitionLeave || props.animation.leave;
+function isLeaveSupported(props, transitionName) {
+    return (transitionName || props.transitionName) && props.transitionLeave || props.animation.leave;
 }
-function isDisappearSupported(props) {
-    return props.transitionName && props.transitionDisappear || props.animation.disappear;
+function isDisappearSupported(props, transitionName) {
+    return (transitionName || props.transitionName) && props.transitionDisappear || props.animation.disappear;
 }
 function allowAppearCallback(props) {
     return props.transitionAppear || props.animation.appear;
@@ -487,7 +487,7 @@ var AnimateChild = /** @class */ (function (_super) {
         }
     };
     AnimateChild.prototype.componentWillEnter = function (done) {
-        if (animUtil.isEnterSupported(this.props)) {
+        if (animUtil.isEnterSupported(this.props, this.transitionName)) {
             this.togglerDisply(true);
             this.transition("enter", done);
         }
@@ -497,7 +497,7 @@ var AnimateChild = /** @class */ (function (_super) {
         }
     };
     AnimateChild.prototype.componentWillAppear = function (done) {
-        if (animUtil.isAppearSupported(this.props)) {
+        if (animUtil.isAppearSupported(this.props, this.transitionName)) {
             this.togglerDisply(true);
             this.transition("appear", done);
         }
@@ -508,7 +508,7 @@ var AnimateChild = /** @class */ (function (_super) {
     };
     AnimateChild.prototype.componentWillDisappear = function (done) {
         var _this = this;
-        if (animUtil.isDisappearSupported(this.props)) {
+        if (animUtil.isDisappearSupported(this.props, this.transitionName)) {
             this.transition("disappear", function () {
                 _this.togglerDisply(false);
                 done();
@@ -521,7 +521,7 @@ var AnimateChild = /** @class */ (function (_super) {
     };
     AnimateChild.prototype.componentWillLeave = function (done) {
         var _this = this;
-        if (animUtil.isLeaveSupported(this.props)) {
+        if (animUtil.isLeaveSupported(this.props, this.transitionName)) {
             this.transition("leave", function () {
                 _this.togglerDisply(false);
                 done();
@@ -543,11 +543,7 @@ var AnimateChild = /** @class */ (function (_super) {
             return;
         }
         var props = this.props;
-        var childTransitionName = (props.children &&
-            props.children[0] &&
-            props.children[0].attributes &&
-            props.children[0].attributes.transitionName);
-        var transitionName = childTransitionName || props.transitionName;
+        var transitionName = this.transitionName || props.transitionName;
         var nameIsObj = typeof transitionName === "object";
         this.stop();
         var end = function () {
@@ -590,7 +586,10 @@ var AnimateChild = /** @class */ (function (_super) {
         }
     };
     AnimateChild.prototype.render = function () {
-        return this.props.children && this.props.children[0];
+        var props = this.props;
+        var child = props.children && props.children[0];
+        this.transitionName = child.attributes && child.attributes.transitionName;
+        return child;
     };
     return AnimateChild;
 }(Component));
@@ -731,7 +730,7 @@ var Animate = /** @class */ (function (_super) {
         _this.keysToLeave = [];
         // const tmpChildren = getChildrenFromProps(this.props);
         var children = [];
-        forEach(_this.props.children, function (child) {
+        forEach(props.children, function (child) {
             if (isValidElement(child)) {
                 if (!child.key) {
                     child = cloneElement(child, {
