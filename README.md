@@ -1,7 +1,7 @@
 # preact-animate
 ---
 
-animate preact element easily
+animate preact or react element easily
 
 ## Feature
 
@@ -13,6 +13,7 @@ animate preact element easily
 
 ## Usage
 
+### preact
 ```jsx
 import Animate from 'preact-animate';
 
@@ -22,6 +23,29 @@ preact.render(
     <p key="2">2</p>
   </Animate>
 , mountNode);
+```
+
+### react
+set webpack alias
+
+``` javascript
+module.exports = {
+  resolve: {
+    alias: {
+      "preact-animate": "preact-animate/dist/react-animate.js"
+    }
+  }
+}
+```
+
+or rollup alias
+``` javascript
+const alias = require('rollup-plugin-alias')
+module.exports = {
+  plugins: [new alias({
+    'preact-animate': 'preact-animate/dist/react-animate.js'
+  })]
+}
 ```
 
 ## API

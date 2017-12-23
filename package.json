@@ -1,7 +1,7 @@
 {
   "name": "preact-animate",
-  "version": "2.3.0",
-  "description": "css-transition ui component for preact",
+  "version": "2.4.0",
+  "description": "css-transition ui component for preact or react",
   "scripts": {
     "build-react:min": "cross-env NODE_ENV=production REACT=react rollup -c rollup.config.js",
     "build-react": "cross-env REACT=react rollup -c rollup.config.js",
@@ -12,6 +12,7 @@
     "lint": "tslint src/*.ts"
   },
   "keywords": [
+    "react",
     "preact",
     "preact-component",
     "preact-animate",
