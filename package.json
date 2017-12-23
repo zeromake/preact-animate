@@ -3,7 +3,12 @@
   "version": "2.3.0",
   "description": "css-transition ui component for preact",
   "scripts": {
-    "build": "cross-env NODE_ENV=production rollup -c rollup.config.js && rollup -c rollup.config.js",
+    "build-react:min": "cross-env NODE_ENV=production REACT=react rollup -c rollup.config.js",
+    "build-react": "cross-env REACT=react rollup -c rollup.config.js",
+    "build-preact:min": "cross-env NODE_ENV=production REACT=preact rollup -c rollup.config.js",
+    "build-preact": "cross-env REACT=preact rollup -c rollup.config.js",
+    "build:all": "npm run build-react && npm run build-react:min && npm run build-preact && npm run build-preact:min && npm run fix",
+    "fix": "sed -i 's/const /var /g' dist/*.js",
     "lint": "tslint src/*.ts"
   },
   "keywords": [
@@ -36,6 +41,8 @@
     "cross-env": "^5.0.5",
     "preact": "^8.2.5",
     "rollup": "^0.50.0",
+    "rollup-plugin-alias": "^1.4.0",
+    "rollup-plugin-replace": "^2.0.0",
     "rollup-plugin-typescript": "^0.8.1",
     "rollup-plugin-uglify": "^2.0.1",
     "tslint": "^5.7.0",

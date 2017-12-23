@@ -1,4 +1,4 @@
-import { Component } from "preact";
+import { Component, findProps, findDOMNode, Children } from "react-import";
 import cssAnimate, { isCssAnimationSupported } from "./css-animation";
 import animUtil from "./util";
 import { forEach } from "./ChildrenUtils";
@@ -85,7 +85,7 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
     }
 
     private transition(animationType: string, finishCallback: () => void) {
-        const node: HTMLElement = animUtil.findDOMNode(this);
+        const node: HTMLElement = findDOMNode(this);
         if (node.nodeType === 3) {
             finishCallback();
             return;
@@ -140,8 +140,9 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
 
     public render() {
         const props = this.props;
-        const child = props.children && props.children[0];
-        this.transitionName = child.attributes && child.attributes.transitionName;
+        const child = Children.only(props.children);
+        const childProps = findProps(child);
+        this.transitionName = childProps && childProps.transitionName;
         return child;
     }
 }

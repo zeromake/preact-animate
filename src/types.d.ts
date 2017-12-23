@@ -15,3 +15,23 @@ declare module "css-animation" {
     export const isCssAnimationSupported: boolean;
     export default cssAnimate;
 }
+
+declare module "react-import" {
+    import { h, Component, cloneElement } from "preact";
+    interface IChildren {
+        map: (children: any[], callback: any, ctx?: any) => any[];
+        forEach: (children: any[], callback: any, ctx?: any) => any;
+        only: (children: any[]) => any;
+    }
+    const Children: IChildren;
+    function findProps(vnode: any);
+    function findDOMNode(component: Component<any, any>): HTMLElement;
+    export {
+        h,
+        Component,
+        cloneElement,
+        Children,
+        findProps,
+        findDOMNode,
+    };
+}

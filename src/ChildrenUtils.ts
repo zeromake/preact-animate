@@ -1,4 +1,4 @@
-import { h } from "preact";
+import { h, Children, findProps } from "react-import";
 
 export function arrayMap(children: any[] | undefined, callback: (item: any, index?: number, arr?: any[]) => any, ctx?: any) {
     if (children == null) {
@@ -25,7 +25,8 @@ export function findChildInChildrenByKey(children, key) {
         if (ret) {
             return;
         }
-        if (child && child.key === key) {
+        const childKey = child && child.key;
+        if (childKey && childKey === key) {
             ret = child;
         }
     });
@@ -35,9 +36,10 @@ export function findChildInChildrenByKey(children, key) {
 export function findShownChildInChildrenByKey(children, key, showProp) {
     let ret = null;
     forEach(children, (child) => {
-        if (child && child.key === key && child.attributes[showProp]) {
+        const childKey = child && child.key;
+        if (childKey && childKey === key && findProps(child)[showProp]) {
             if (ret) {
-                throw new Error("two child with same key for <Animate> children");
+                throw new TypeError("two child with same key for <Animate> children");
             }
             ret = child;
         }
@@ -51,7 +53,8 @@ export function findHiddenChildInChildrenByKey(children, key, showProp) {
         if (found) {
             return;
         }
-        found = child && child.key === key && !child.attributes[showProp];
+        const childKey = child && child.key;
+        found = childKey && childKey === key && !findProps(child)[showProp];
     });
     return found;
 }
@@ -66,7 +69,7 @@ export function isSameChildren(c1, c2, showProp) {
                     same = false;
                 } else if (child.key !== child2.key) {
                     same = false;
-                } else if (showProp && child.attributes[showProp] !== child2.attributes[showProp]) {
+                } else if (showProp && findProps(child)[showProp] !== findProps(child2)[showProp]) {
                     same = false;
                 }
             }
@@ -83,9 +86,10 @@ export function mergeChildren(prev, next) {
     const nextChildrenPending = {};
     let pendingChildren = [];
     forEach(prev, (child) => {
-        if (child && findChildInChildrenByKey(next, child.key)) {
+        const childKey = child && child.key;
+        if (child && findChildInChildrenByKey(next, childKey)) {
             if (pendingChildren.length) {
-                nextChildrenPending[child.key] = pendingChildren;
+                nextChildrenPending[childKey] = pendingChildren;
                 pendingChildren = [];
             }
         } else {
@@ -94,8 +98,9 @@ export function mergeChildren(prev, next) {
     });
 
     forEach(next, (child) => {
-        if (child && nextChildrenPending.hasOwnProperty(child.key)) {
-            ret = ret.concat(nextChildrenPending[child.key]);
+        const childKey = child && child.key;
+        if (child && nextChildrenPending.hasOwnProperty(childKey)) {
+            ret = ret.concat(nextChildrenPending[childKey]);
         }
         ret.push(child);
     });
@@ -110,15 +115,21 @@ export function isValidElement(element) {
     return element && (element instanceof VNode);
 }
 
-export function isChildrenShow(child, children, showProp, key) {
+export function isChildrenShow(child, children, showProp, key, flag = false) {
     const has = child && findChildInChildrenByKey(children, key);
     let status = false;
     if (showProp) {
-        const showInNow = child.attributes[showProp];
+        const showInNow = findProps(child)[showProp];
         if (has) {
             const showInNext = findShownChildInChildrenByKey(children, key, showProp);
-            if (!showInNext && showInNow) {
-                status = true;
+            if (flag) {
+                if (showInNext && showInNow) {
+                    status = true;
+                }
+            } else {
+                if (!showInNext && showInNow) {
+                    status = true;
+                }
             }
         } else if (showInNow) {
             status = true;
@@ -128,22 +139,3 @@ export function isChildrenShow(child, children, showProp, key) {
     }
     return status;
 }
-
-// export function isAnimateShow(child, children, showProp, key) {
-//     const has = child && findChildInChildrenByKey(children, key);
-//     let status = false;
-//     if (showProp) {
-//         const showInNow = child.attributes[showProp];
-//         if (has) {
-//             const showInNext = findShownChildInChildrenByKey(children, key, showProp);
-//             if (showInNext && showInNow) {
-//                 status = true;
-//             }
-//         } else if (showInNow) {
-//             status = true;
-//         }
-//     } else if (!has) {
-//         status = true;
-//     }
-//     return status;
-// }

@@ -1,4 +1,4 @@
-import preact, { Component } from "preact";
+import { Component, findDOMNode } from "react-import";
 
 export function isAppearSupported(props: any, transitionName: any) {
     return (transitionName || props.transitionName) && props.transitionAppear || props.animation.appear;
@@ -20,13 +20,6 @@ export function allowEnterCallback(props: any) {
 }
 export function allowLeaveCallback(props: any) {
     return props.transitionLeave || props.animation.leave;
-}
-export function findDOMNode(component: Component<any, any>) {
-    if (typeof preact.findDOMNode === "function") {
-        return preact.findDOMNode(component);
-    } else {
-        return (component as any).base || component;
-    }
 }
 export function addDisplyNone(component: any) {
     const node = findDOMNode(component);

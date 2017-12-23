@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
-    <script src="https://cdn.bootcss.com/preact/8.2.7/preact.dev.js"></script>
-    <script src="../dist/preact-animate.js"></script>
+    <script src="https://cdn.bootcss.com/react/16.2.0/umd/react.development.js"></script>
+    <script src="https://cdn.bootcss.com/react-dom/16.2.0/umd/react-dom.development.js"></script>
+    <script src="../dist/react-animate.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/animate.css@3.5.1" rel="stylesheet" type="text/css">
     <style>
         .test {
@@ -22,9 +23,9 @@
 
     </div>
     <script>
-        var h = preact.h;
-        var Component = preact.Component;
-        var render = preact.render;
+        var h = React.createElement;
+        var Component = React.Component;
+        var render = ReactDOM.render;
         var Animate = animate;
 
         var test = function(props) {
@@ -53,14 +54,14 @@
                 })
             }
             test3(component, key) {
-                console.log(key, component.base)
+                console.log(key, component)
             }
             test4(component, done) {
                 console.log("onLeave");
                 setTimeout(done, 10000)
             }
             onAfterCancelled(component, type) {
-                console.log("onAfterCancelled: ", component.base, type);
+                console.log("onAfterCancelled: ", component, type);
             }
             render() {
                 return h(
@@ -103,6 +104,5 @@
         }
         render(h(App), document.getElementById('app'))
     </script>
-    <script src="../node_modules/preact/devtools.js"></script>
 </body>
 </html>

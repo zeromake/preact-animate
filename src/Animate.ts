@@ -1,4 +1,4 @@
-import { h, Component, cloneElement } from "preact";
+import { h, Component, cloneElement, Children, findProps } from "react-import";
 // import PropTypes from "prop-types";
 import {
     mergeChildren,
@@ -6,9 +6,9 @@ import {
     findChildInChildrenByKey,
     isSameChildren,
     isValidElement,
+    isChildrenShow,
     forEach,
     arrayMap,
-    isChildrenShow,
 } from "./ChildrenUtils";
 import AnimateChild from "./AnimateChild";
 const defaultKey = `rc_animate_${Date.now()}`;
@@ -21,10 +21,12 @@ enum AnimateType {
     disappear = 4,
 }
 
+const Injection = ["className", "style"];
+
 function getChildrenFromProps(props: IAnimateProps) {
     const children = props.children;
     const newChildren = [];
-    forEach(children, (child) => {
+    Children.forEach(children, (child) => {
         if (isValidElement(child)) {
             if (!child.key) {
                 child = cloneElement(child, {
@@ -101,18 +103,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         this.currentlyAnimatingKeys = {};
         this.keysToEnter = [];
         this.keysToLeave = [];
-        // const tmpChildren = getChildrenFromProps(this.props);
-        const children = [];
-        forEach(props.children, (child) => {
-            if (isValidElement(child)) {
-                if (!child.key) {
-                    child = cloneElement(child, {
-                        key: defaultKey,
-                    });
-                }
-                children.push(child);
-            }
-        });
+        const children = getChildrenFromProps(props);
         this.state = {
             children,
         };
@@ -127,7 +118,8 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         const disappearChildren = [];
         if (showProp) {
             forEach(children, (child) => {
-                if (!!child.attributes[showProp]) {
+                const props = findProps(child);
+                if (!!props[showProp]) {
                     appearChildren.push(child);
                 } else {
                     disappearChildren.push(child);
@@ -170,7 +162,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                 const nextChild = currentChild && findChildInChildrenByKey(nextChildren, currentChild.key);
                 let newChild;
                 const tmpChild = nextChild || currentChild;
-                if ((!nextChild || !nextChild.attributes[showProp]) && currentChild.attributes[showProp]) {
+                if ((!nextChild || !findProps(nextChild)[showProp]) && findProps(currentChild)[showProp]) {
                     newChild = cloneElement(tmpChild, {
                         [showProp]: true,
                     });
@@ -201,7 +193,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
             if (child && currentlyAnimatingKeys[key]) {
                 const status = currentlyAnimatingKeys[key];
                 if (status === AnimateType.leave || status === AnimateType.disappear) {
-                    if (isChildrenShow(child, currentChildren, showProp, key)) {
+                    if (isChildrenShow(child, currentChildren, showProp, key, true)) {
                         this.stop(key);
                         this.keysToEnter.push(key);
                     }
@@ -215,7 +207,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         });
 
         forEach(currentChildren, (child) => {
-            const key = child && child.key;
+            const key = child.key;
             if (child && currentlyAnimatingKeys[key]) {
                 const status = currentlyAnimatingKeys[key];
                 if (status === AnimateType.enter || status === AnimateType.appear) {
@@ -386,14 +378,15 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
             if (child === null || child === undefined) {
                 return child;
             }
-            if (!child.key) {
-                throw new Error("must set key for <rc-animate> children");
+            const childKey = child && child.key;
+            if (!childKey) {
+                throw new TypeError("must set key for <Animate> children");
             }
             const refFun = (node) => {
-                this.childrenRefs[child.key] = node;
+                this.childrenRefs[childKey] = node;
             };
             const childProps = {
-                key: child.key,
+                key: childKey,
                 ref: refFun,
                 animation: props.animation,
                 transitionDisappear: props.transitionDisappear,
@@ -405,7 +398,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                 onLeave: props.onLeave,
                 displyShow: false,
             };
-            if (animUtil.isDisplyShow(props, child.attributes)) {
+            if (animUtil.isDisplyShow(props, findProps(child))) {
                 childProps.displyShow = true;
             }
             return h(
@@ -418,9 +411,14 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         if (_Component) {
             let passedProps: any = props;
             if (typeof _Component === "string") {
+                const injecObj = {};
+                Injection.forEach((name: string) => {
+                    if ((name in props)) {
+                        injecObj[name] = props[name];
+                    }
+                });
                 passedProps = {
-                    className: props.className,
-                    style: props.style,
+                    ...injecObj,
                     ...props.componentProps,
                 };
             }

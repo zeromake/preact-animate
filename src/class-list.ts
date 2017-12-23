@@ -1,7 +1,7 @@
 const re = /\s+/;
 const toString = Object.prototype.toString;
 
-const index = function _(arr, obj){
+const index = function _(arr, obj) {
     if (arr.indexOf) {
         return arr.indexOf(obj);
     }
