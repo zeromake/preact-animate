@@ -111,12 +111,6 @@ module.exports = {
          <td>whether support transition leave anim</td>
        </tr>
        <tr>
-         <td>onEnd</td>
-         <td>function(key:String, exists:Boolean)</td>
-         <td>true</td>
-         <td>animation end callback</td>
-       </tr>
-       <tr>
          <td>onBeforeEnter</td>
          <td>function(child: AnimateChild) => void;</td>
          <td>null</td>
@@ -124,9 +118,9 @@ module.exports = {
        </tr>
        <tr>
          <td>onEnter</td>
-         <td>function(child: AnimateChild, callBack: () => void) => void;</td>
+         <td>function(child: AnimateChild, done: () => void) => void;</td>
          <td>null</td>
-         <td>animation Enter life must called `callBack`</td>
+         <td>animation Enter life must called `done`</td>
        </tr>
        <tr>
          <td>onAfterEnter</td>
@@ -142,9 +136,9 @@ module.exports = {
        </tr>
        <tr>
          <td>onLeave</td>
-         <td>function(child: AnimateChild, callBack: () => void) => void;</td>
+         <td>function(child: AnimateChild, done: () => void) => void;</td>
          <td>null</td>
-         <td>animation Leave life must called `callBack`</td>
+         <td>animation Leave life must called `done`</td>
        </tr>
        <tr>
          <td>onAfterLeave</td>
@@ -153,10 +147,46 @@ module.exports = {
          <td>animation after Leave life</td>
        </tr>
        <tr>
+         <td>onBeforeAppear</td>
+         <td>function(child: AnimateChild) => void;</td>
+         <td>null</td>
+         <td>animation before appear life</td>
+       </tr>
+       <tr>
+         <td>onAppear</td>
+         <td>function(child: AnimateChild, done: () => void) => void;</td>
+         <td>null</td>
+         <td>animation Appear life must called `done`</td>
+       </tr>
+       <tr>
+         <td>onAfterAppear</td>
+         <td>function(child: AnimateChild) => void;</td>
+         <td>null</td>
+         <td>animation after Appear life</td>
+       </tr>
+       <tr>
+         <td>onBeforeDisappear</td>
+         <td>function(child: AnimateChild) => void;</td>
+         <td>null</td>
+         <td>animation before Disappear life</td>
+       </tr>
+       <tr>
+         <td>onDisappear</td>
+         <td>function(child: AnimateChild, done: () => void) => void;</td>
+         <td>null</td>
+         <td>animation Disappear life must called `done`</td>
+       </tr>
+       <tr>
+         <td>onAfterDisappear</td>
+         <td>function(child: AnimateChild) => void;</td>
+         <td>null</td>
+         <td>animation after Disappear life</td>
+       </tr>
+       <tr>
          <td>onAfterCancelled</td>
          <td>function(child: AnimateChild, status: number) => any</td>
          <td>null</td>
-         <td>animation after cancelled Leave life</td>
+         <td>animation after cancelled life</td>
        </tr>
        <tr>
          <td>animation</td>

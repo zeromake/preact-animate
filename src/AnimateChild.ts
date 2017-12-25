@@ -19,8 +19,10 @@ interface IAnimateChildProps {
     transitionLeave: boolean;
     transitionDisappear: boolean;
     displyShow: boolean;
-    onEnter: (child: AnimateChild, callBack: () => void) => void;
-    onLeave: (child: AnimateChild, callBack: () => void) => void;
+    onEnter: (child: AnimateChild, done: () => void) => void;
+    onLeave: (child: AnimateChild, done: () => void) => void;
+    onAppear: (child: AnimateChild, done: () => void) => void;
+    onDisappear: (child: AnimateChild, done: () => void) => void;
 }
 
 export default class AnimateChild extends Component<IAnimateChildProps, any> {
@@ -115,6 +117,12 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
             } else if (props.onLeave && animationType === "leave") {
                 isAnimateEvent = false;
                 propsEvent = props.onLeave;
+            } else if (props.onAppear && animationType === "appear" ) {
+                isAnimateEvent = false;
+                propsEvent = props.onAppear;
+            } else if (props.onDisappear && animationType === "disappear" ) {
+                isAnimateEvent = false;
+                propsEvent = props.onDisappear;
             }
             this.stopper = cssAnimate(
                 node,

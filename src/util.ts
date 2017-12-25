@@ -21,6 +21,9 @@ export function allowEnterCallback(props: any) {
 export function allowLeaveCallback(props: any) {
     return props.transitionLeave || props.animation.leave;
 }
+export function allowDisappearCallback(props: any) {
+    return props.transitionDisappear || props.animation.disappear;
+}
 export function addDisplyNone(component: any) {
     const node = findDOMNode(component);
     if (node && node.style) {
@@ -52,6 +55,7 @@ export default {
     allowAppearCallback,
     allowEnterCallback,
     allowLeaveCallback,
+    allowDisappearCallback,
     findDOMNode,
     addDisplyNone,
     removeDisplyNone,

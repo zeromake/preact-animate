@@ -43,29 +43,140 @@ function noop() {
 }
 
 interface IAnimateProps {
+    /**
+     * 默认为'span', 用于Animate包裹多个子项必须
+     */
     component: any;
+
+    /**
+     * 为上面的component设置props, 其中className, style可以来自Animate的className, style
+     */
     componentProps: object;
+
+    /**
+     * 纯javascript动画
+     */
     animation: object;
-    transitionName: string|object;
+
+    /**
+     * 设置各个状态的class
+     */
+    transitionName?: string | object;
+
+    /**
+     * 是否启用Enter
+     */
     transitionEnter: boolean;
-    transitionAppear: boolean;
+
+    /**
+     * 是否启用Leave
+     */
     transitionLeave: boolean;
+
+    /**
+     * 是否启用Appear
+     */
+    transitionAppear: boolean;
+
+    /**
+     * 是否启用Disappear
+     */
     transitionDisappear: boolean;
+
+    /**
+     * 只允许有一个动画执行
+     */
     exclusive: boolean;
-    onEnd: (key: string, exists: boolean) => void;
-    onEnter: (child: AnimateChild, callBack: () => void) => void;
-    onLeave: (child: AnimateChild, callBack: () => void) => void;
-    onAppear: (key: string) => void;
-    showProp: string;
-    disableShow?: boolean;
-    className?: string;
-    style?: string|object;
-    children: any[];
-    onAfterCancelled?: (child: AnimateChild, status: AnimateType) => any;
-    onBeforeLeave?: (child: AnimateChild) => any;
-    onAfterLeave?: (child: AnimateChild) => any;
+
+    /**
+     * 进入前生命周期
+     */
     onBeforeEnter?: (child: AnimateChild) => any;
+
+    /**
+     * 进入时生命周期, 需要调用done才能结束动画
+     */
+    onEnter?: (child: AnimateChild, done: () => void) => void;
+
+    /**
+     * 进入后生命周期
+     */
     onAfterEnter?: (child: AnimateChild) => any;
+
+    /**
+     * 离开前生命周期
+     */
+    onBeforeLeave?: (child: AnimateChild) => any;
+
+    /**
+     * 离开时生命周期, 需要调用done才能结束动画
+     */
+    onLeave?: (child: AnimateChild, done: () => void) => void;
+
+    /**
+     * 离开后生命周期, 调用该方法时dom已更新
+     */
+    onAfterLeave?: (child: AnimateChild) => any;
+
+    /**
+     * 出现前生命周期(同onBeforeEnter)
+     */
+    onBeforeAppear?: (child: AnimateChild) => void;
+
+    /**
+     * 出现时生命周期, 需要调用done才能结束动画
+     */
+    onAppear?: (child: AnimateChild, done: () => void) => void;
+
+    /**
+     * 出现后生命周期
+     */
+    onAfterAppear?: (child: AnimateChild) => void;
+
+    /**
+     * 消失前生命周期(同onBeforeLeave)
+     */
+    onBeforeDisappear?: (child: AnimateChild) => void;
+
+    /**
+     * 消失时生命周期, 需要调用done才能结束动画
+     */
+    onDisappear?: (child: AnimateChild, done: () => void) => void;
+
+    /**
+     * 消失后生命周期
+     */
+    onAfterDisappear?: (child: AnimateChild) => void;
+
+    /**
+     * 取消动画后生命周期
+     */
+    onAfterCancelled?: (child: AnimateChild, status: AnimateType) => any;
+
+    /**
+     * 使用变量切换状态的key
+     */
+    showProp: string;
+
+    /**
+     * 是否使用原生的display: none来切换
+     */
+    disableShow?: boolean;
+
+    /**
+     * component的默认class
+     */
+    className?: string;
+
+    /**
+     * component的默认style
+     */
+    style?: string | object;
+
+    /**
+     * 进行动画状态管理的child
+     */
+    children: any[];
 }
 interface IAnimateState {
     children: any[];
@@ -90,11 +201,8 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         transitionEnter: true,
         transitionLeave: true,
         transitionAppear: false,
+        transitionDisappear: false,
         disableShow: false,
-        onEnd: noop,
-        onEnter: null,
-        onLeave: null,
-        onAppear: noop,
     };
 
     constructor(props: IAnimateProps, c) {
@@ -238,7 +346,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         const activeChild = this.childrenRefs[key];
         if (activeChild) {
             this.currentlyAnimatingKeys[key] = AnimateType.enter;
-            if (this.props.onBeforeEnter) {
+            if (animUtil.allowEnterCallback(this.props) && this.props.onBeforeEnter) {
                 this.props.onBeforeEnter(activeChild);
             }
             activeChild.componentWillEnter(() => {
@@ -252,7 +360,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         const activeChild = this.childrenRefs[key];
         if (activeChild) {
             this.currentlyAnimatingKeys[key] = AnimateType.leave;
-            if (this.props.onBeforeLeave) {
+            if (animUtil.allowLeaveCallback(this.props) && this.props.onBeforeLeave) {
                 this.props.onBeforeLeave(activeChild);
             }
             activeChild.componentWillLeave(() => {
@@ -262,18 +370,26 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
     }
 
     public performAppear = (key) => {
-        if (this.childrenRefs[key]) {
+        const activeChild = this.childrenRefs[key];
+        if (activeChild) {
             this.currentlyAnimatingKeys[key] = AnimateType.appear;
-            this.childrenRefs[key].componentWillAppear(() => {
+            if (animUtil.allowAppearCallback(this.props) && this.props.onBeforeAppear) {
+                this.props.onBeforeAppear(activeChild);
+            }
+            activeChild.componentWillAppear(() => {
                 this.handleDoneAdding(key, AnimateType.appear);
             });
         }
     }
 
     public performDisappear = (key) => {
-        if (this.childrenRefs[key]) {
+        const activeChild = this.childrenRefs[key];
+        if (activeChild) {
             this.currentlyAnimatingKeys[key] = AnimateType.disappear;
-            this.childrenRefs[key].componentWillDisappear(() => {
+            if (animUtil.allowDisappearCallback(this.props) && this.props.onBeforeDisappear) {
+                this.props.onBeforeDisappear(activeChild);
+            }
+            activeChild.componentWillDisappear(() => {
                 this.handleDoneLeaving(key, AnimateType.disappear);
             });
         }
@@ -300,14 +416,15 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         } else {
             if (type === AnimateType.appear) {
                 if (animUtil.allowAppearCallback(props)) {
+                    this.callLife(key, props.onAfterAppear);
                     // props.onAppear(key);
-                    props.onEnd(key, true);
+                    // props.onEnd(key, true);
                 }
             } else {
                 if (animUtil.allowEnterCallback(props)) {
                     // props.onEnter(key);
                     this.callLife(key, props.onAfterEnter);
-                    props.onEnd(key, true);
+                    // props.onEnd(key, true);
                 }
             }
         }
@@ -330,7 +447,11 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                 if (type === AnimateType.leave) {
                     if (animUtil.allowLeaveCallback(props)) {
                         this.callLife(key, props.onAfterLeave, activeChild);
-                        props.onEnd(key, false);
+                        // props.onEnd(key, false);
+                    }
+                } else {
+                    if (animUtil.allowDisappearCallback(props)) {
+                        this.callLife(key, props.onAfterDisappear, activeChild);
                     }
                 }
             };
@@ -396,6 +517,8 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                 transitionLeave: props.transitionLeave,
                 onEnter: props.onEnter,
                 onLeave: props.onLeave,
+                onAppear: props.onAppear,
+                onDisappear: props.onDisappear,
                 displyShow: false,
             };
             if (animUtil.isDisplyShow(props, findProps(child))) {
