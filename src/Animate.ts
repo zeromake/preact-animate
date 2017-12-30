@@ -508,6 +508,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
             };
             const childProps = {
                 key: childKey,
+                rawKey: childKey,
                 ref: refFun,
                 animation: props.animation,
                 transitionDisappear: props.transitionDisappear,
