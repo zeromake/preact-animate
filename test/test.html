@@ -28,7 +28,7 @@
         var Animate = animate;
 
         var test = function(props) {
-            return h('div', { className: 'animated test', "data-show": props['data-show']}, props.name)
+            return h('div', Object.assign({}, props, { className: 'animated test ' + (props.className || ""), "data-show": props['data-show']}), props.name)
         }
 
         class App extends Component {

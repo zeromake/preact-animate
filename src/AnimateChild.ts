@@ -1,5 +1,5 @@
 import { Component, findProps, findDOMNode, Children } from "react-import";
-import cssAnimate, { isCssAnimationSupported } from "./css-animation";
+import { cssAnimate, isCssAnimationSupported } from "./component-animation";
 import animUtil from "./util";
 import { forEach } from "./ChildrenUtils";
 
@@ -29,6 +29,27 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
     public stopper: null | { stop: () => void};
     public displayCss: string | undefined;
     public transitionName: any = null;
+
+    constructor(props, content) {
+        super(props, content);
+        const child = Children.only(props.children);
+        const childProps = findProps(child);
+        this.transitionName = childProps && childProps.transitionName;
+        console.log("AnimateChild");
+        this.state = {
+            child,
+        };
+    }
+
+    public componentWillReceiveProps(nextProps) {
+        const child = Children.only(nextProps.children);
+        const childProps = findProps(child);
+        this.transitionName = childProps && childProps.transitionName;
+        this.setState({
+            child,
+        });
+    }
+
     public componentWillUnmount() {
         this.stop();
     }
@@ -125,7 +146,7 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
                 propsEvent = props.onDisappear;
             }
             this.stopper = cssAnimate(
-                node,
+                this,
                 { name, active: activeName },
                 end,
                 isAnimateEvent,
@@ -147,10 +168,6 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
     }
 
     public render() {
-        const props = this.props;
-        const child = Children.only(props.children);
-        const childProps = findProps(child);
-        this.transitionName = childProps && childProps.transitionName;
-        return child;
+        return this.state.child;
     }
 }

@@ -27,9 +27,18 @@
         var Component = React.Component;
         var render = ReactDOM.render;
         var Animate = animate;
-
+        const names = [
+            "onTransitionEnd",
+            "onAnimationEnd"
+        ]
         var test = function(props) {
-            return h('div', { className: 'animated test', "data-show": props['data-show']}, props.name)
+            const newProps = {}
+            names.forEach(function(name) {
+                if (name in props) {
+                    newProps[name] = props[name]
+                }
+            })
+            return h('div', Object.assign({}, newProps, { className: 'animated test ' + (props.className || ""), "data-show": props['data-show']}), props.name)
         }
 
         class App extends Component {
