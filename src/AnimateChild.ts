@@ -31,6 +31,7 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
     public transitionName: any = null;
     public componentWillUnmount() {
         this.stop();
+        animUtil.removeDisplyNone(this);
     }
     private togglerDisply(show: boolean) {
         if (this.props.displyShow) {
