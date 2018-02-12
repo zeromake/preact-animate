@@ -1,6 +1,6 @@
 {
   "name": "preact-animate",
-  "version": "2.7.0",
+  "version": "2.7.1",
   "description": "css-transition ui component for preact or react",
   "scripts": {
     "build-react:min": "cross-env NODE_ENV=production REACT=react rollup -c rollup.config.js",
@@ -37,6 +37,7 @@
   "license": "MIT",
   "main": "dist/preact-animate.js",
   "module": "dist/preact-animate-esm.js",
+  "jsnext:main": "dist/preact-animate-esm.js",
   "minified:main": "dist/preact-animate.min.js",
   "devDependencies": {
     "cross-env": "^5.1.3",
