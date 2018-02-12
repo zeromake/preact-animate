@@ -44,22 +44,28 @@ if (isReact) {
 
 module.exports = {
     input: 'src/Animate.ts',
-    name: 'animate',
     external: external,
-    globals: globals,
     plugins: basePlugins,
-    sourcemap: !isProduction,
     output: isProduction ? [
         {
+            name: 'animate',
+            sourcemap: !isProduction,
+            globals: globals,
             format: 'umd',
             file: pkg["minified:main"].replace("preact", reactStr)
         }
     ] : [
         {
+            name: 'animate',
+            sourcemap: !isProduction,
+            globals: globals,
             format: 'umd',
             file: pkg.main.replace("preact", reactStr)
         },
         {
+            name: 'animate',
+            sourcemap: !isProduction,
+            globals: globals,
             format: 'es',
             file: pkg.module.replace("preact", reactStr)
         }
