@@ -14,18 +14,28 @@ function findProps(vnode: IVNode) {
 function findDOMNode(component: Component<any, any>) {
     return component && component.base;
 }
+function isArray(obj: any): boolean {
+    if (Array.isArray) {
+        return Array.isArray(obj);
+    }
+    return toString.call(obj) === "[object Array]";
+}
 
-declare type Child = IVNode[] | undefined | null;
-declare type ChildCallback = (item?: IVNode, index?: number, arr?: IVNode[]) => IVNode[];
+declare type childType = IVNode|string|number|boolean|null|undefined|void;
+declare type Child = childType[] | childType;
+declare type ChildCallback = (item?: childType, index?: number, arr?: childType[]) => childType[];
 
 const arrayMap = Array.prototype.map;
 const arrayForEach = Array.prototype.forEach;
 const arraySlice = Array.prototype.slice;
 
 const Children = {
-    map(children: Child, callback: ChildCallback, ctx?: any) {
+    map(children: Child, callback: ChildCallback, ctx?: any): childType[] {
         if (children == null) {
             return null;
+        }
+        if (!isArray(children)) {
+            children = [children as childType];
         }
         if (ctx && ctx !== children) {
             callback = callback.bind(ctx);
@@ -36,16 +46,36 @@ const Children = {
         if (children == null) {
             return null;
         }
+        if (!isArray(children)) {
+            children = [children as childType];
+        }
         if (ctx && ctx !== children) {
             callback = callback.bind(ctx);
         }
         return arrayForEach.call(children, callback);
     },
-    only(children: Child) {
-        if (!children || children.length !== 1) {
-            throw new TypeError("Children.only() expects only one child.");
+    count(children: Child): number {
+        if (children == null) {
+            return 0;
         }
-        return children[0];
+        if (!isArray(children)) {
+            return 1;
+        }
+        return (children as childType[]).length;
+    },
+    only(children: Child): childType {
+        if (children != null && !isArray(children)) {
+            return children as childType;
+        }
+        throw new TypeError("Children.only() expects only one child.");
+    },
+    toArray(children: Child): childType[] {
+        if (children == null) {
+            return [];
+        } else if (!isArray(children)) {
+            return [children as childType];
+        }
+        return arraySlice.call(children);
     },
 };
 
