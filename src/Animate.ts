@@ -8,7 +8,6 @@ import {
     isValidElement,
     isChildrenShow,
     forEach,
-    arrayMap,
 } from "./ChildrenUtils";
 import AnimateChild from "./AnimateChild";
 const defaultKey = `rc_animate_${Date.now()}`;
@@ -203,7 +202,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         // in case destroy in showProp mode
         let newChildren = [];
         if (showProp) {
-            forEach(currentChildren, (currentChild) => {
+            Children.forEach(currentChildren, (currentChild) => {
                 const nextChild = currentChild && findChildInChildrenByKey(nextChildren, currentChild.key);
                 let newChild;
                 const tmpChild = nextChild || currentChild;
@@ -233,7 +232,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         // this.setState({
         //     children: newChildren,
         // });
-        forEach(nextChildren, (child) => {
+        Children.forEach(nextChildren, (child) => {
             const key = child && child.key;
             if (child && currentlyAnimatingKeys[key]) {
                 const status = currentlyAnimatingKeys[key];
@@ -251,7 +250,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
 
         });
 
-        forEach(currentChildren, (child) => {
+        Children.forEach(currentChildren, (child) => {
             const key = child.key;
             if (child && currentlyAnimatingKeys[key]) {
                 const status = currentlyAnimatingKeys[key];
@@ -313,7 +312,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         let appearChildren = [];
         const disappearChildren = [];
         if (showProp) {
-            forEach(children, (child) => {
+            Children.forEach(children, (child) => {
                 const props = findProps(child);
                 if (!!props[showProp]) {
                     appearChildren.push(child);
@@ -324,12 +323,12 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         } else {
             appearChildren = children;
         }
-        forEach(appearChildren, (child) => {
+        Children.forEach(appearChildren, (child) => {
             if (child) {
                 this.performAppear(child.key);
             }
         });
-        forEach(disappearChildren, (child) => {
+        Children.forEach(disappearChildren, (child) => {
             if (child) {
                 this.performDisappear(child.key);
             }
@@ -503,7 +502,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         this.nextProps = props;
         const stateChildren = this.state.children;
         let children = null;
-        children = arrayMap(stateChildren, (child) => {
+        children = Children.map(stateChildren, (child) => {
             if (child === null || child === undefined) {
                 return child;
             }

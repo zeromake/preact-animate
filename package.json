@@ -1,13 +1,15 @@
 {
   "name": "preact-animate",
-  "version": "2.7.1",
+  "version": "2.7.2",
   "description": "css-transition ui component for preact or react",
   "scripts": {
     "build-react:min": "cross-env NODE_ENV=production REACT=react rollup -c rollup.config.js",
     "build-react": "cross-env REACT=react rollup -c rollup.config.js",
     "build-preact:min": "cross-env NODE_ENV=production REACT=preact rollup -c rollup.config.js",
     "build-preact": "cross-env REACT=preact rollup -c rollup.config.js",
-    "build:all": "npm run build-react && npm run build-react:min && npm run build-preact && npm run build-preact:min && npm run fix",
+    "build-zreact:min": "cross-env NODE_ENV=production REACT=zreact rollup -c rollup.config.js",
+    "build-zreact": "cross-env REACT=zreact rollup -c rollup.config.js",
+    "build:all": "npm run build-react && npm run build-react:min && npm run build-preact && npm run build-preact:min && npm run build-zreact && npm run build-zreact:min && npm run fix",
     "fix": "sed -i 's/const /var /g' dist/*.js",
     "lint": "tslint src/*.ts"
   },
