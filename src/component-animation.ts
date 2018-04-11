@@ -3,6 +3,8 @@
  */
 import { Component, findProps, findDOMNode, Children, cloneElement } from "react-import";
 
+import AnimateChild from "./AnimateChild";
+
 type voidFun = () => void;
 
 interface IEndCall {
@@ -59,6 +61,31 @@ function detectEvents() {
     }
 }
 
+export function filterProps(props: any, newProps?: any) {
+    // const newProps = {};
+    if (!newProps) {
+        newProps = {};
+    }
+    for (const name of endEvents) {
+        const eventName = `on${name}`;
+        if (eventName in props) {
+            newProps[eventName] = props[eventName];
+            delete props[eventName];
+        }
+    }
+    let oldClass = props.class || props.className;
+    const className = newProps.class || newProps.className;
+    if (oldClass && className) {
+        oldClass += " " + className;
+    } else {
+        oldClass = oldClass || className;
+    }
+    if (oldClass) {
+        (newProps as any).className = oldClass;
+    }
+    return newProps;
+}
+
 if (typeof window !== "undefined" && typeof document !== "undefined") {
     detectEvents();
 }
@@ -74,8 +101,8 @@ function addEndEventListener(props, eventListener) {
     });
 }
 
-export function cssAnimate(
-    component: Component<any, any>,
+export function componentAnimate(
+    component: AnimateChild,
     transitionName: string | ITransition,
     endCallback: voidFun | IEndCall,
     isAddEvent: boolean,
@@ -99,23 +126,23 @@ export function cssAnimate(
         classArr.push(oldClass);
     }
     classArr.push(className);
-    let newProps = {};
-    component.rcEndListener = function(e) {
+    const newProps = {};
+    component.rcEndListener = function rcEndListener(e: Event) {
         if (component.rcAnimTimeout) {
             clearTimeout(component.rcAnimTimeout);
             component.rcAnimTimeout = null;
         }
         component.setState({
             child: cloneElement(child, {}),
-        }, function () {
+        }, function __() {
             component.rcEndListener = null;
             if (end) {
                 (end as voidFun)();
             }
         });
-    }
+    };
 
-    const buildProps = function() {
+    const buildProps = function __() {
         return { className: classArr.join(" "), ...newProps };
     };
     addEndEventListener(newProps, component.rcEndListener);
@@ -123,14 +150,14 @@ export function cssAnimate(
         start();
     }
     component.setState({
-        child: cloneElement(child, buildProps())
-    }, function() {
-        component.rcAnimTimeout = setTimeout(function _() {
+        child: cloneElement(child, buildProps()),
+    }, function _() {
+        component.rcAnimTimeout = setTimeout(function __() {
             component.rcAnimTimeout = null;
             classArr.push(activeClassName);
             component.setState({
-                child: cloneElement(child, buildProps())
-            }, function() {
+                child: cloneElement(child, buildProps()),
+            }, function ___() {
                 if (active) {
                     setTimeout(active, 0);
                 }
@@ -146,6 +173,4 @@ export function cssAnimate(
     };
 }
 
-
 export const isCssAnimationSupported = endEvents.length !== 0;
-

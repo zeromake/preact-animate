@@ -28,7 +28,7 @@
         var Animate = animate;
 
         var test = function(props) {
-            return h('div', Object.assign({}, props, { className: 'animated test ' + (props.className || ""), "data-show": props['data-show']}), props.name)
+            return h('div', Animate.filterProps(props, {className: 'animated test', "data-show": props['data-show']}), props.name)
         }
 
         class App extends Component {
@@ -87,7 +87,8 @@
                             onAfterLeave: (component) => this.test3(component, "AfterLeave"),
                             onBeforeEnter: (component) => this.test3(component, "BeforeEnter"),
                             onAfterEnter: (component) => this.test3(component, "AfterEnter"),
-                            showProp: "data-show"
+                            showProp: "data-show",
+                            isRender: false
                         },
                         h(test, {name: '测试1', key: 1, 'data-show': this.state.show1 && this.state.show, transitionName: {
                             enter: "fadeInLeft",

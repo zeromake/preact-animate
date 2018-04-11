@@ -176,13 +176,17 @@ interface IAnimateProps {
      * 进行动画状态管理的child
      */
     children: any[];
+    isRender?: boolean;
 }
 interface IAnimateState {
     children: any[];
     self: Animate;
 }
 
+import { filterProps } from "./component-animation";
+
 export default class Animate extends Component<IAnimateProps, IAnimateState> {
+    public static filterProps = filterProps;
     public static getDerivedStateFromProps(nextProps: IAnimateProps, previousState: IAnimateState): any {
         const self = previousState.self;
         self.nextProps = nextProps;
@@ -289,6 +293,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         transitionAppear: false,
         transitionDisappear: false,
         disableShow: false,
+        isRender: false,
     };
 
     constructor(props: IAnimateProps, c) {
@@ -527,6 +532,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                 onLeave: props.onLeave,
                 onAppear: props.onAppear,
                 onDisappear: props.onDisappear,
+                isRender: props.isRender,
                 displyShow: false,
             };
             if (animUtil.isDisplyShow(props, findProps(child))) {

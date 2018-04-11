@@ -66,6 +66,8 @@ const Children = {
     only(children: Child): childType {
         if (children != null && !isArray(children)) {
             return children as childType;
+        } else if (isArray(children) && (children as childType[]).length === 1) {
+            return children[0];
         }
         throw new TypeError("Children.only() expects only one child.");
     },

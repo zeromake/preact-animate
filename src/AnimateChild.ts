@@ -1,5 +1,6 @@
 import { Component, findProps, findDOMNode, Children } from "react-import";
-import { cssAnimate, isCssAnimationSupported } from "./component-animation";
+import { componentAnimate, isCssAnimationSupported } from "./component-animation";
+import cssAnimate from "./css-animation";
 import animUtil from "./util";
 import { forEach } from "./ChildrenUtils";
 
@@ -19,6 +20,8 @@ interface IAnimateChildProps {
     transitionLeave: boolean;
     transitionDisappear: boolean;
     displyShow: boolean;
+    children?: any[];
+    isRender: boolean;
     onEnter: (child: AnimateChild, done: () => void) => void;
     onLeave: (child: AnimateChild, done: () => void) => void;
     onAppear: (child: AnimateChild, done: () => void) => void;
@@ -26,28 +29,42 @@ interface IAnimateChildProps {
 }
 
 export default class AnimateChild extends Component<IAnimateChildProps, any> {
+    public static getDerivedStateFromProps(nextProps: IAnimateChildProps, previousState: any): any {
+        const child = Children.only(nextProps.children);
+        const childProps = findProps(child);
+        const self: AnimateChild = previousState.self;
+        self.transitionName = childProps && childProps.transitionName;
+        self.isRender = !!(childProps && childProps.isRender);
+        return {
+            child,
+        };
+    }
+
     public stopper: null | { stop: () => void};
     public displayCss: string | undefined;
-    public transitionName: any = null;
+    public transitionName: string|object|null = null;
+    public rcEndListener?: (e?: Event) => void;
+    public rcAnimTimeout?: number;
+    public isRender: boolean;
 
     constructor(props, content) {
         super(props, content);
         const child = Children.only(props.children);
         const childProps = findProps(child);
         this.transitionName = childProps && childProps.transitionName;
-        console.log("AnimateChild");
+        this.isRender = childProps && childProps.isRender;
+        // console.log("AnimateChild");
         this.state = {
             child,
+            self: this,
         };
     }
 
     public componentWillReceiveProps(nextProps) {
-        const child = Children.only(nextProps.children);
-        const childProps = findProps(child);
-        this.transitionName = childProps && childProps.transitionName;
-        this.setState({
-            child,
-        });
+        const state = AnimateChild.getDerivedStateFromProps(nextProps, this.state);
+        if (state) {
+            this.setState(state);
+        }
     }
 
     public componentWillUnmount() {
@@ -146,12 +163,21 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
                 isAnimateEvent = false;
                 propsEvent = props.onDisappear;
             }
-            this.stopper = cssAnimate(
-                this,
-                { name, active: activeName },
-                end,
-                isAnimateEvent,
-            );
+            if (props.isRender || this.isRender) {
+                this.stopper = componentAnimate(
+                    this,
+                    { name, active: activeName },
+                    end,
+                    isAnimateEvent,
+                );
+            } else {
+                this.stopper = cssAnimate(
+                    node,
+                    { name, active: activeName },
+                    end,
+                    isAnimateEvent,
+                );
+            }
             if (!isAnimateEvent && propsEvent) {
                 propsEvent(this, this.stop.bind(this));
             }
