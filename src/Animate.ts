@@ -8,7 +8,6 @@ import {
     isValidElement,
     isChildrenShow,
     forEach,
-    arrayMap,
 } from "./ChildrenUtils";
 import AnimateChild from "./AnimateChild";
 const defaultKey = `rc_animate_${Date.now()}`;
@@ -180,9 +179,96 @@ interface IAnimateProps {
 }
 interface IAnimateState {
     children: any[];
+    self: Animate;
 }
 
 export default class Animate extends Component<IAnimateProps, IAnimateState> {
+    public static getDerivedStateFromProps(nextProps: IAnimateProps, previousState: IAnimateState): any {
+        const self = previousState.self;
+        self.nextProps = nextProps;
+        const nextChildren = getChildrenFromProps(nextProps);
+        const props = self.props;
+        // exclusive needs immediate response
+        if (props.exclusive) {
+            forEach(Object.keys(self.currentlyAnimatingKeys), (key) => {
+                self.stop(key);
+            });
+        }
+        const showProp = props.showProp;
+        const currentlyAnimatingKeys = self.currentlyAnimatingKeys;
+        // last props children if exclusive
+        const currentChildren = props.exclusive ?
+            getChildrenFromProps(props) : self.state.children;
+        // in case destroy in showProp mode
+        let newChildren = [];
+        if (showProp) {
+            Children.forEach(currentChildren, (currentChild) => {
+                const nextChild = currentChild && findChildInChildrenByKey(nextChildren, currentChild.key);
+                let newChild;
+                const tmpChild = nextChild || currentChild;
+                if ((!nextChild || !findProps(nextChild)[showProp]) && findProps(currentChild)[showProp]) {
+                    newChild = cloneElement(tmpChild, {
+                        [showProp]: true,
+                    });
+                } else {
+                    newChild = nextChild;
+                }
+                if (newChild) {
+                    newChildren.push(newChild);
+                }
+            });
+            forEach(nextChildren, (nextChild) => {
+                if (!nextChild || !findChildInChildrenByKey(currentChildren, nextChild.key)) {
+                    newChildren.push(nextChild);
+                }
+            });
+        } else {
+            newChildren = mergeChildren(
+                currentChildren,
+                nextChildren,
+            );
+        }
+        // need render to avoid update
+        // this.setState({
+        //     children: newChildren,
+        // });
+        Children.forEach(nextChildren, (child) => {
+            const key = child && child.key;
+            if (child && currentlyAnimatingKeys[key]) {
+                const status = currentlyAnimatingKeys[key];
+                if (status === AnimateType.leave || status === AnimateType.disappear) {
+                    if (isChildrenShow(child, currentChildren, showProp, key, true)) {
+                        self.stop(key);
+                        self.keysToEnter.push(key);
+                    }
+                }
+                return;
+            }
+            if (isChildrenShow(child, currentChildren, showProp, key)) {
+                self.keysToEnter.push(key);
+            }
+
+        });
+
+        Children.forEach(currentChildren, (child) => {
+            const key = child.key;
+            if (child && currentlyAnimatingKeys[key]) {
+                const status = currentlyAnimatingKeys[key];
+                if (status === AnimateType.enter || status === AnimateType.appear) {
+                    if (isChildrenShow(child, nextChildren, showProp, key)) {
+                        self.stop(key);
+                        self.keysToLeave.push(key);
+                    }
+                }
+                return;
+            }
+            if (isChildrenShow(child, nextChildren, showProp, key)) {
+                self.keysToLeave.push(key);
+            }
+        });
+        return { children: newChildren };
+    }
+
     public currentlyAnimatingKeys: {
         [key: string]: AnimateType;
     };
@@ -214,6 +300,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         const children = getChildrenFromProps(props);
         this.state = {
             children,
+            self: this,
         };
 
         this.childrenRefs = {};
@@ -225,7 +312,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         let appearChildren = [];
         const disappearChildren = [];
         if (showProp) {
-            forEach(children, (child) => {
+            Children.forEach(children, (child) => {
                 const props = findProps(child);
                 if (!!props[showProp]) {
                     appearChildren.push(child);
@@ -236,100 +323,20 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         } else {
             appearChildren = children;
         }
-        forEach(appearChildren, (child) => {
+        Children.forEach(appearChildren, (child) => {
             if (child) {
                 this.performAppear(child.key);
             }
         });
-        forEach(disappearChildren, (child) => {
+        Children.forEach(disappearChildren, (child) => {
             if (child) {
                 this.performDisappear(child.key);
             }
         });
     }
-
     public componentWillReceiveProps(nextProps, nextContext) {
-        this.nextProps = nextProps;
-        const nextChildren = getChildrenFromProps(nextProps);
-        const props = this.props;
-        // exclusive needs immediate response
-        if (props.exclusive) {
-            forEach(Object.keys(this.currentlyAnimatingKeys), (key) => {
-                this.stop(key);
-            });
-        }
-        const showProp = props.showProp;
-        const currentlyAnimatingKeys = this.currentlyAnimatingKeys;
-        // last props children if exclusive
-        const currentChildren = props.exclusive ?
-            getChildrenFromProps(props) : this.state.children;
-        // in case destroy in showProp mode
-        let newChildren = [];
-        if (showProp) {
-            forEach(currentChildren, (currentChild) => {
-                const nextChild = currentChild && findChildInChildrenByKey(nextChildren, currentChild.key);
-                let newChild;
-                const tmpChild = nextChild || currentChild;
-                if ((!nextChild || !findProps(nextChild)[showProp]) && findProps(currentChild)[showProp]) {
-                    newChild = cloneElement(tmpChild, {
-                        [showProp]: true,
-                    });
-                } else {
-                    newChild = nextChild;
-                }
-                if (newChild) {
-                    newChildren.push(newChild);
-                }
-            });
-            forEach(nextChildren, (nextChild) => {
-                if (!nextChild || !findChildInChildrenByKey(currentChildren, nextChild.key)) {
-                    newChildren.push(nextChild);
-                }
-            });
-        } else {
-            newChildren = mergeChildren(
-                currentChildren,
-                nextChildren,
-            );
-        }
-        // need render to avoid update
-        this.setState({
-            children: newChildren,
-        });
-        forEach(nextChildren, (child) => {
-            const key = child && child.key;
-            if (child && currentlyAnimatingKeys[key]) {
-                const status = currentlyAnimatingKeys[key];
-                if (status === AnimateType.leave || status === AnimateType.disappear) {
-                    if (isChildrenShow(child, currentChildren, showProp, key, true)) {
-                        this.stop(key);
-                        this.keysToEnter.push(key);
-                    }
-                }
-                return;
-            }
-            if (isChildrenShow(child, currentChildren, showProp, key)) {
-                this.keysToEnter.push(key);
-            }
-
-        });
-
-        forEach(currentChildren, (child) => {
-            const key = child.key;
-            if (child && currentlyAnimatingKeys[key]) {
-                const status = currentlyAnimatingKeys[key];
-                if (status === AnimateType.enter || status === AnimateType.appear) {
-                    if (isChildrenShow(child, nextChildren, showProp, key)) {
-                        this.stop(key);
-                        this.keysToLeave.push(key);
-                    }
-                }
-                return;
-            }
-            if (isChildrenShow(child, nextChildren, showProp, key)) {
-                this.keysToLeave.push(key);
-            }
-        });
+        const state = Animate.getDerivedStateFromProps(nextProps, this.state);
+        this.setState(state);
     }
 
     public componentDidUpdate() {
@@ -495,7 +502,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         this.nextProps = props;
         const stateChildren = this.state.children;
         let children = null;
-        children = arrayMap(stateChildren, (child) => {
+        children = Children.map(stateChildren, (child) => {
             if (child === null || child === undefined) {
                 return child;
             }
