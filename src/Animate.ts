@@ -511,7 +511,8 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
             if (child === null || child === undefined) {
                 return child;
             }
-            const childKey = child && child.key;
+            const _childProps = findProps(child);
+            const childKey = (child && child.key) || (_childProps && _childProps.key);
             if (!childKey) {
                 throw new TypeError("must set key for <Animate> children");
             }

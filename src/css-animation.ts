@@ -1,39 +1,10 @@
 import ClassList from "./class-list";
 import Event from "./Event";
-
-type voidFun = () => void;
-
-interface IEndCall {
-    end: voidFun;
-    start: voidFun;
-    active: voidFun;
-}
-interface ITransition {
-    active: string;
-    name: string;
-}
-export const isCssAnimationSupported = Event.endEvents.length !== 0;
-const prefixes = ["-webkit-", "-moz-", "-o-", "ms-", ""];
-
-function getStyleProperty(node, name) {
-    const style = window.getComputedStyle(node, null);
-    let ret = "";
-    for (const i of prefixes) {
-        ret = style.getPropertyValue(i + name);
-        if (ret) {
-            break;
-        }
-    }
-    return ret;
-}
+import { isCssAnimationSupported, getAnimationTime, voidFun, IEndCall, ITransition } from "./base-animation";
 
 function fixBrowserByTimeout(node) {
     if (isCssAnimationSupported) {
-        const transitionDelay = parseFloat(getStyleProperty(node, "transition-delay")) || 0;
-        const transitionDuration = parseFloat(getStyleProperty(node, "transition-duration")) || 0;
-        const animationDelay = parseFloat(getStyleProperty(node, "animation-delay")) || 0;
-        const animationDuration = parseFloat(getStyleProperty(node, "animation-duration")) || 0;
-        const time = Math.max(transitionDuration + transitionDelay, animationDuration + animationDelay);
+        const time = getAnimationTime(node);
         // sometimes, browser bug
         node.rcEndAnimTimeout = setTimeout(function _() {
             node.rcEndAnimTimeout = null;
@@ -118,6 +89,5 @@ function cssAnimate(
         },
     };
 }
-(cssAnimate as any).isCssAnimationSupported = isCssAnimationSupported;
 
 export default cssAnimate;

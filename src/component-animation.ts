@@ -2,64 +2,8 @@
  * 使用纯react更新render来更新dom达到动画切换class
  */
 import { Component, findProps, findDOMNode, Children, cloneElement } from "react-import";
-
 import AnimateChild from "./AnimateChild";
-
-type voidFun = () => void;
-
-interface IEndCall {
-    end: voidFun;
-    start: voidFun;
-    active: voidFun;
-}
-interface ITransition {
-    active: string;
-    name: string;
-}
-
-const EVENT_NAME_MAP = {
-    transitionend: {
-        transition: "TransitionEnd",
-        WebkitTransition: "WebkitTransitionEnd",
-        MozTransition: "MozTransitionEnd",
-        OTransition: "OTransitionEnd",
-        msTransition: "MSTransitionEnd",
-    },
-    animationend: {
-        animation: "AnimationEnd",
-        WebkitAnimation: "WebkitAnimationEnd",
-        MozAnimation: "MozAnimationEnd",
-        OAnimation: "OAnimationEnd",
-        msAnimation: "MSAnimationEnd",
-    },
-};
-
-const endEvents = [];
-
-function detectEvents() {
-    const testEl = document.createElement("div");
-    const style = testEl.style;
-
-    if (!("AnimationEvent" in window)) {
-        delete EVENT_NAME_MAP.animationend.animation;
-    }
-
-    if (!("TransitionEvent" in window)) {
-        delete EVENT_NAME_MAP.transitionend.transition;
-    }
-
-    for (const baseEventName in EVENT_NAME_MAP) {
-        if (EVENT_NAME_MAP.hasOwnProperty(baseEventName)) {
-            const baseEvents = EVENT_NAME_MAP[baseEventName];
-            for (const styleName in baseEvents) {
-                if (styleName in style) {
-                    endEvents.push(baseEvents[styleName]);
-                    break;
-                }
-            }
-        }
-    }
-}
+import { endEvents, getAnimationTime, voidFun, IEndCall, ITransition } from "./base-animation";
 
 export function filterProps(props: any, newProps?: any) {
     // const newProps = {};
@@ -86,10 +30,6 @@ export function filterProps(props: any, newProps?: any) {
     return newProps;
 }
 
-if (typeof window !== "undefined" && typeof document !== "undefined") {
-    detectEvents();
-}
-
 function addEndEventListener(props, eventListener) {
     if (endEvents.length === 0) {
         window.setTimeout(eventListener, 0);
@@ -100,30 +40,12 @@ function addEndEventListener(props, eventListener) {
         // addEventListener(node, endEvent, eventListener);
     });
 }
-
-const prefixes = ["-webkit-", "-moz-", "-o-", "ms-", ""];
-function getStyleProperty(node, name) {
-    const style = window.getComputedStyle(node, null);
-    let ret = "";
-    for (const i of prefixes) {
-        ret = style.getPropertyValue(i + name);
-        if (ret) {
-            break;
-        }
-    }
-    return ret;
-}
-
 function fixBrowserByTimeout(component: AnimateChild) {
     if (isCssAnimationSupported) {
         const node = findDOMNode(component);
-        const transitionDelay = parseFloat(getStyleProperty(node, "transition-delay")) || 0;
-        const transitionDuration = parseFloat(getStyleProperty(node, "transition-duration")) || 0;
-        const animationDelay = parseFloat(getStyleProperty(node, "animation-delay")) || 0;
-        const animationDuration = parseFloat(getStyleProperty(node, "animation-duration")) || 0;
-        const time = Math.max(transitionDuration + transitionDelay, animationDuration + animationDelay);
+        const time = getAnimationTime(node);
         // sometimes, browser bug
-        component.rcEndAnimTimeout = setTimeout(function _() {
+        component.rcEndAnimTimeout = setTimeout(() => {
             component.rcEndAnimTimeout = null;
             if (component.rcEndListener) {
                 component.rcEndListener();
@@ -181,7 +103,7 @@ export function componentAnimate(
         });
     };
 
-    const buildProps = function __() {
+    const buildProps = () => {
         return { className: classArr.join(" "), ...newProps };
     };
     addEndEventListener(newProps, component.rcEndListener);
@@ -190,13 +112,13 @@ export function componentAnimate(
     }
     component.setState({
         child: cloneElement(child, buildProps()),
-    }, function _() {
-        component.rcAnimTimeout = setTimeout(function __() {
+    }, () => {
+        component.rcAnimTimeout = setTimeout(() => {
             component.rcAnimTimeout = null;
             classArr.push(activeClassName);
             component.setState({
                 child: cloneElement(child, buildProps()),
-            }, function ___() {
+            }, () => {
                 if (active) {
                     setTimeout(active, 0);
                 }
