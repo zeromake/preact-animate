@@ -45,7 +45,9 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
     public transitionName: string|object|null = null;
     public rcEndListener?: (e?: Event) => void;
     public rcAnimTimeout?: number;
+    public rcEndAnimTimeout?: number;
     public isRender: boolean;
+    public renderFlag: boolean;
 
     constructor(props, content) {
         super(props, content);
@@ -53,11 +55,16 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
         const childProps = findProps(child);
         this.transitionName = childProps && childProps.transitionName;
         this.isRender = childProps && childProps.isRender;
+        this.renderFlag = true;
         // console.log("AnimateChild");
         this.state = {
             child,
             self: this,
         };
+    }
+
+    public shouldComponentUpdate(nextProps: IAnimateChildProps, nextState: any): boolean {
+        return this.renderFlag;
     }
 
     public componentWillReceiveProps(nextProps) {

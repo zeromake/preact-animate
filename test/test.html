@@ -88,7 +88,7 @@
                             onBeforeEnter: (component) => this.test3(component, "BeforeEnter"),
                             onAfterEnter: (component) => this.test3(component, "AfterEnter"),
                             showProp: "data-show",
-                            isRender: false
+                            isRender: true
                         },
                         h(test, {name: '测试1', key: 1, 'data-show': this.state.show1 && this.state.show, transitionName: {
                             enter: "fadeInLeft",

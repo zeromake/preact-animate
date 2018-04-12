@@ -101,6 +101,43 @@ function addEndEventListener(props, eventListener) {
     });
 }
 
+const prefixes = ["-webkit-", "-moz-", "-o-", "ms-", ""];
+function getStyleProperty(node, name) {
+    const style = window.getComputedStyle(node, null);
+    let ret = "";
+    for (const i of prefixes) {
+        ret = style.getPropertyValue(i + name);
+        if (ret) {
+            break;
+        }
+    }
+    return ret;
+}
+
+function fixBrowserByTimeout(component: AnimateChild) {
+    if (isCssAnimationSupported) {
+        const node = findDOMNode(component);
+        const transitionDelay = parseFloat(getStyleProperty(node, "transition-delay")) || 0;
+        const transitionDuration = parseFloat(getStyleProperty(node, "transition-duration")) || 0;
+        const animationDelay = parseFloat(getStyleProperty(node, "animation-delay")) || 0;
+        const animationDuration = parseFloat(getStyleProperty(node, "animation-duration")) || 0;
+        const time = Math.max(transitionDuration + transitionDelay, animationDuration + animationDelay);
+        // sometimes, browser bug
+        component.rcEndAnimTimeout = setTimeout(function _() {
+            component.rcEndAnimTimeout = null;
+            if (component.rcEndListener) {
+                component.rcEndListener();
+            }
+        }, time * 1000 + 200);
+    }
+}
+function clearBrowserBugTimeout(component: AnimateChild) {
+    if (component.rcEndAnimTimeout) {
+        clearTimeout(component.rcEndAnimTimeout);
+        component.rcEndAnimTimeout = null;
+    }
+}
+
 export function componentAnimate(
     component: AnimateChild,
     transitionName: string | ITransition,
@@ -132,8 +169,10 @@ export function componentAnimate(
             clearTimeout(component.rcAnimTimeout);
             component.rcAnimTimeout = null;
         }
+        clearBrowserBugTimeout(component);
+        component.renderFlag = true;
         component.setState({
-            child: cloneElement(child, {}),
+            child,
         }, function __() {
             component.rcEndListener = null;
             if (end) {
@@ -161,7 +200,12 @@ export function componentAnimate(
                 if (active) {
                     setTimeout(active, 0);
                 }
+                component.renderFlag = false;
             });
+            if (isAddEvent) {
+                fixBrowserByTimeout(component);
+                // 30ms for firefox
+            }
         }, 30);
     });
     return {
