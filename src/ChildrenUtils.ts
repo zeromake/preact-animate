@@ -109,10 +109,8 @@ export function mergeChildren(prev, next) {
     return ret;
 }
 
-const VNode = h("a", null).constructor;
-
 export function isValidElement(element) {
-    return element && (element instanceof VNode);
+    return element && element.hasOwnProperty('nodeName');
 }
 
 export function isChildrenShow(child, children, showProp, key, flag = false) {
