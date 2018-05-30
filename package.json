@@ -10,7 +10,7 @@
     "build-zreact:min": "cross-env NODE_ENV=production REACT=zreact rollup -c rollup.config.js",
     "build-zreact": "cross-env REACT=zreact rollup -c rollup.config.js",
     "build:all": "npm run build-react && npm run build-react:min && npm run build-preact && npm run build-preact:min && npm run build-zreact && npm run build-zreact:min && npm run fix",
-    "fix": "sed -i '' 's/const /var /g' dist/*.js",
+    "fix": "node sed.js",
     "lint": "tslint src/*.ts"
   },
   "keywords": [
