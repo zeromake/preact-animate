@@ -110,7 +110,7 @@ export function mergeChildren(prev, next) {
 }
 
 export function isValidElement(element) {
-    return element && element.hasOwnProperty('nodeName');
+    return element && element.hasOwnProperty("nodeName");
 }
 
 export function isChildrenShow(child, children, showProp, key, flag = false) {
