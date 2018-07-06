@@ -14,7 +14,7 @@ function callBack(err, stdout, stderr) {
 }
 
 if (os.platform() === "darwin") {
-    exec(shell1.concat("").concat(shell2).join(" "), callBack)
+    exec(shell1.concat("\"\"").concat(shell2).join(" "), callBack)
 } else {
     exec(shell1.concat(shell2).join(" "), callBack)
 }

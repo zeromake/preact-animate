@@ -77,7 +77,7 @@ export function componentAnimate(
         start = (endCallback as IEndCall).start;
         active = (endCallback as IEndCall).active;
     }
-    const child = Children.only(component.props.children);
+    let child = Children.only(component.props.children);
     const props = findProps(child);
     const oldClass = props.class || props.className;
     const classArr = [];
@@ -93,6 +93,8 @@ export function componentAnimate(
         }
         clearBrowserBugTimeout(component);
         component.renderFlag = true;
+        child = component.lastChilden || child;
+        component.lastChilden = null;
         component.setState({
             child,
         }, function __() {
@@ -113,9 +115,11 @@ export function componentAnimate(
     component.setState({
         child: cloneElement(child, buildProps()),
     }, () => {
+        component.renderFlag = false;
         component.rcAnimTimeout = setTimeout(() => {
             component.rcAnimTimeout = null;
             classArr.push(activeClassName);
+            component.renderFlag = true;
             component.setState({
                 child: cloneElement(child, buildProps()),
             }, () => {

@@ -35,6 +35,9 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
         const self: AnimateChild = previousState.self;
         self.transitionName = childProps && childProps.transitionName;
         self.isRender = !!(childProps && childProps.isRender);
+        if (!self.renderFlag) {
+            self.lastChilden = child;
+        }
         return {
             child,
         };
@@ -48,6 +51,8 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
     public rcEndAnimTimeout?: number;
     public isRender: boolean;
     public renderFlag: boolean;
+    // public selfRender: boolean;
+    public lastChilden: any;
 
     constructor(props, content) {
         super(props, content);
@@ -134,7 +139,7 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
 
     private transition(animationType: string, finishCallback: () => void) {
         const node: HTMLElement = findDOMNode(this);
-        if (node.nodeType === 3) {
+        if (!node || node.nodeType === 3) {
             finishCallback();
             return;
         }
