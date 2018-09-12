@@ -52,15 +52,15 @@ function cssAnimate(
             (node as any).rcAnimTimeout = null;
         }
         clearBrowserBugTimeout(node);
+        if (end) {
+            (end as voidFun)();
+        }
         nodeClasses.remove(className);
         nodeClasses.remove(activeClassName);
         if (isAddEvent) {
             Event.removeEndEventListener(node, (node as any).rcEndListener);
         }
         (node as any).rcEndListener = null;
-        if (end) {
-            (end as voidFun)();
-        }
     };
     if (isAddEvent) {
         Event.addEndEventListener(node, (node as any).rcEndListener);

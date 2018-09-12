@@ -1,4 +1,4 @@
-import { Component, findProps, findDOMNode, Children } from "react-import";
+import { Component, findProps, findDOMNode, Children, PolyfillLifecycle } from "react-import";
 import { componentAnimate, isCssAnimationSupported } from "./component-animation";
 import cssAnimate from "./css-animation";
 import animUtil from "./util";
@@ -28,7 +28,7 @@ interface IAnimateChildProps {
     onDisappear: (child: AnimateChild, done: () => void) => void;
 }
 
-export default class AnimateChild extends Component<IAnimateChildProps, any> {
+class AnimateChild extends Component<IAnimateChildProps, any> {
     public static getDerivedStateFromProps(nextProps: IAnimateChildProps, previousState: any): any {
         const child = Children.only(nextProps.children);
         const childProps = findProps(child);
@@ -37,10 +37,12 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
         self.isRender = !!(childProps && childProps.isRender);
         if (!self.renderFlag) {
             self.lastChilden = child;
+        } else if (!self.animateIng) {
+            return {
+                child,
+            };
         }
-        return {
-            child,
-        };
+        return null;
     }
 
     public stopper: null | { stop: () => void};
@@ -51,6 +53,7 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
     public rcEndAnimTimeout?: number;
     public isRender: boolean;
     public renderFlag: boolean;
+    public animateIng?: boolean;
     // public selfRender: boolean;
     public lastChilden: any;
 
@@ -72,13 +75,6 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
         return this.renderFlag;
     }
 
-    public componentWillReceiveProps(nextProps) {
-        const state = AnimateChild.getDerivedStateFromProps(nextProps, this.state);
-        if (state) {
-            this.setState(state);
-        }
-    }
-
     public componentWillUnmount() {
         this.stop();
         animUtil.removeDisplyNone(this);
@@ -93,21 +89,19 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
         }
     }
     public componentWillEnter(done: () => void) {
+        this.togglerDisply(true);
         if (animUtil.isEnterSupported(this.props, this.transitionName)) {
-            this.togglerDisply(true);
             this.transition("enter", done);
         } else {
-            this.togglerDisply(true);
             done();
         }
     }
 
     public componentWillAppear(done: () => void) {
+        this.togglerDisply(true);
         if (animUtil.isAppearSupported(this.props, this.transitionName)) {
-            this.togglerDisply(true);
             this.transition("appear", done);
         } else {
-            this.togglerDisply(true);
             done();
         }
     }
@@ -210,3 +204,6 @@ export default class AnimateChild extends Component<IAnimateChildProps, any> {
         return this.state.child;
     }
 }
+
+PolyfillLifecycle(AnimateChild);
+export default AnimateChild;

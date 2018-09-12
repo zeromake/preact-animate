@@ -11,6 +11,9 @@ function findProps(vnode: IVNode) {
     return vnode && vnode.props;
 }
 
+function PolyfillLifecycle(component: any): void {
+}
+
 export {
     h,
     Component,
@@ -19,4 +22,5 @@ export {
     findProps,
     findDOMNode,
     isValidElement,
+    PolyfillLifecycle,
 };

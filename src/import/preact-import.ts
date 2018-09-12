@@ -85,6 +85,17 @@ function isValidElement(element): boolean {
     return element && element.hasOwnProperty("nodeName");
 }
 
+function PolyfillLifecycle(component: any): void {
+    if (component.getDerivedStateFromProps) {
+        component.prototype.componentWillReceiveProps = function componentWillReceiveProps(nextProps: any) {
+            const state = component.getDerivedStateFromProps(nextProps, this.state);
+            if (state != null) {
+                this.setState(state);
+            }
+        };
+    }
+}
+
 export {
     h,
     Component,
@@ -93,4 +104,5 @@ export {
     findProps,
     findDOMNode,
     isValidElement,
+    PolyfillLifecycle,
 };

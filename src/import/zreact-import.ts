@@ -15,6 +15,9 @@ function isValidElement(element): boolean {
     return element && element.hasOwnProperty("nodeName");
 }
 
+function PolyfillLifecycle(component: any): void {
+}
+
 export {
     h,
     Component,
@@ -23,4 +26,5 @@ export {
     findProps,
     findDOMNode,
     isValidElement,
+    PolyfillLifecycle,
 };

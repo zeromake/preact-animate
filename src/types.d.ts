@@ -27,6 +27,7 @@ declare module "react-import" {
     function findProps(vnode: any);
     function findDOMNode(component: Component<any, any>): HTMLElement;
     function isValidElement(element: any): boolean;
+    function PolyfillLifecycle(component: any): void;
     export {
         h,
         Component,
@@ -35,5 +36,6 @@ declare module "react-import" {
         findProps,
         findDOMNode,
         isValidElement,
+        PolyfillLifecycle,
     };
 }

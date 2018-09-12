@@ -13,8 +13,8 @@ export function filterProps(props: any, newProps?: any) {
     for (const name of endEvents) {
         const eventName = `on${name}`;
         if (eventName in props) {
-            newProps[eventName] = props[eventName];
-            delete props[eventName];
+            const {[eventName]: event} = props;
+            newProps[eventName] = event;
         }
     }
     let oldClass = props.class || props.className;
@@ -50,7 +50,7 @@ function fixBrowserByTimeout(component: AnimateChild) {
             if (component.rcEndListener) {
                 component.rcEndListener();
             }
-        }, time * 1000 + 200);
+        }, time * 1000 + 200) as any;
     }
 }
 function clearBrowserBugTimeout(component: AnimateChild) {
@@ -99,6 +99,7 @@ export function componentAnimate(
             child,
         }, function __() {
             component.rcEndListener = null;
+            component.animateIng = false;
             if (end) {
                 (end as voidFun)();
             }
@@ -106,12 +107,13 @@ export function componentAnimate(
     };
 
     const buildProps = () => {
-        return { className: classArr.join(" "), ...newProps };
+        return { ...newProps, className: classArr.join(" ") };
     };
     addEndEventListener(newProps, component.rcEndListener);
     if (start) {
         start();
     }
+    component.animateIng = true;
     component.setState({
         child: cloneElement(child, buildProps()),
     }, () => {
@@ -132,7 +134,7 @@ export function componentAnimate(
                 fixBrowserByTimeout(component);
                 // 30ms for firefox
             }
-        }, 30);
+        }, 30) as any;
     });
     return {
         stop: function stop() {

@@ -1,4 +1,4 @@
-import { h, Component, cloneElement, Children, findProps, isValidElement } from "react-import";
+import { h, Component, cloneElement, Children, findProps, isValidElement, PolyfillLifecycle } from "react-import";
 // import PropTypes from "prop-types";
 import {
     mergeChildren,
@@ -184,7 +184,7 @@ interface IAnimateState {
 
 import { filterProps } from "./component-animation";
 
-export default class Animate extends Component<IAnimateProps, IAnimateState> {
+class Animate extends Component<IAnimateProps, IAnimateState> {
     public static filterProps = filterProps;
     public static getDerivedStateFromProps(nextProps: IAnimateProps, previousState: IAnimateState): any {
         const self = previousState.self;
@@ -337,10 +337,6 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
                 this.performDisappear(child.key);
             }
         });
-    }
-    public componentWillReceiveProps(nextProps, nextContext) {
-        const state = Animate.getDerivedStateFromProps(nextProps, this.state);
-        this.setState(state);
     }
 
     public componentDidUpdate() {
@@ -564,3 +560,7 @@ export default class Animate extends Component<IAnimateProps, IAnimateState> {
         return children && children[0];
     }
 }
+
+PolyfillLifecycle(Animate);
+
+export default Animate;
