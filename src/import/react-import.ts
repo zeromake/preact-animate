@@ -1,4 +1,4 @@
-import { createElement as h, Component, cloneElement, Children } from "react";
+import { createElement as h, Component, cloneElement, Children, isValidElement } from "react";
 import { findDOMNode } from "react-dom";
 
 interface IVNode {
@@ -18,4 +18,5 @@ export {
     Children,
     findProps,
     findDOMNode,
+    isValidElement,
 };

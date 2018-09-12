@@ -109,10 +109,6 @@ export function mergeChildren(prev, next) {
     return ret;
 }
 
-export function isValidElement(element) {
-    return element && element.hasOwnProperty("nodeName");
-}
-
 export function isChildrenShow(child, children, showProp, key, flag = false) {
     const has = child && findChildInChildrenByKey(children, key);
     let status = false;

@@ -81,6 +81,10 @@ const Children = {
     },
 };
 
+function isValidElement(element): boolean {
+    return element && element.hasOwnProperty("nodeName");
+}
+
 export {
     h,
     Component,
@@ -88,4 +92,5 @@ export {
     Children,
     findProps,
     findDOMNode,
+    isValidElement,
 };

@@ -26,6 +26,7 @@ declare module "react-import" {
     const Children: IChildren;
     function findProps(vnode: any);
     function findDOMNode(component: Component<any, any>): HTMLElement;
+    function isValidElement(element: any): boolean;
     export {
         h,
         Component,
@@ -33,5 +34,6 @@ declare module "react-import" {
         Children,
         findProps,
         findDOMNode,
+        isValidElement,
     };
 }

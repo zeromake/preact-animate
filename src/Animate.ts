@@ -1,11 +1,10 @@
-import { h, Component, cloneElement, Children, findProps } from "react-import";
+import { h, Component, cloneElement, Children, findProps, isValidElement } from "react-import";
 // import PropTypes from "prop-types";
 import {
     mergeChildren,
     findShownChildInChildrenByKey,
     findChildInChildrenByKey,
     isSameChildren,
-    isValidElement,
     isChildrenShow,
     forEach,
 } from "./ChildrenUtils";
